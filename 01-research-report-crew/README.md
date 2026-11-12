@@ -28,33 +28,35 @@ Output: `output/report.md` plus `output/analysis.json`.
 | Async tasks (`async_execution`) | parallel research subtopics |
 | Task guardrails | Editor output validation |
 | Per-agent LLM config (LiteLLM), Claude / local switch | `llm_factory.py` |
-| `crewai create`, `crewai run`, `kickoff_for_each` | CLI + batch topics |
+| `crewai run`, `kickoff_for_each` | CLI + batch topics |
 
 ## 3. Prepare, build, run
 
-Requirements: Python **3.12 or 3.13** (CrewAI 1.15.x requires `>=3.10,<3.14`; 3.14 is not supported yet), Git, and either an Anthropic API key or [Ollama](https://ollama.com) for a local model.
+This project is a member of the **uv workspace** in the repository root: one shared `.venv` and one `uv.lock` for all three projects. For first-time setup on a new computer (installing uv, Ollama, cloning) see the [root README](../README.md#setting-up-on-another-computer).
 
-### Create the virtual environment and install
+Requirements: [uv](https://docs.astral.sh/uv/) (it downloads Python 3.12 automatically, pinned by the root `.python-version`; CrewAI 1.15.x does not support Python 3.14), and either an Anthropic API key or [Ollama](https://ollama.com) for a local model.
+
+### Install dependencies
+
+Run `uv sync` once from the **repository root** (creates `<root>/.venv` for all projects), then create this project's `.env`.
 
 **Windows (PowerShell)**
 ```powershell
+cd <repo-root>
+uv sync                                  # or: uv sync --package research-report-crew
 cd 01-research-report-crew
-py -3.12 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install -r requirements.txt
 Copy-Item .env.example .env
 ```
 
 **Linux / macOS**
 ```bash
+cd <repo-root>
+uv sync                                  # or: uv sync --package research-report-crew
 cd 01-research-report-crew
-python3.12 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-pip install -r requirements.txt
 cp .env.example .env
 ```
+
+No manual activation is needed; prefix commands with `uv run`. To activate the shared environment anyway: `..\.venv\Scripts\Activate.ps1` (Windows) or `source ../.venv/bin/activate` (Linux).
 
 ### Choose the LLM (edit `.env`)
 
@@ -79,9 +81,10 @@ Start Ollama with a larger context, because the default (4096) is too small for 
 
 ### Run
 
+From `01-research-report-crew/`:
 ```bash
-crewai run                       # uses TOPIC from .env
-python -m research_crew.main --topic "LangGraph vs CrewAI"
+uv run crewai run                                         # uses TOPIC from .env
+uv run python -m research_crew.main --topic "LangGraph vs CrewAI"
 ```
 Results are written to `output/`. To run the hierarchical variant set `PROCESS=hierarchical` in `.env`.
 

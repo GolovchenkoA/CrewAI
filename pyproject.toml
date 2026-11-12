@@ -1,0 +1,26 @@
+[project]
+name = "crewai-learning"
+version = "0.1.0"
+description = "uv workspace root for the CrewAI learning projects"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "research-report-crew",
+    "support-ticket-triage-flow",
+    "code-review-agent",
+]
+
+[tool.uv]
+# The root only aggregates the members; it is not a package itself.
+package = false
+
+[tool.uv.sources]
+research-report-crew = { workspace = true }
+support-ticket-triage-flow = { workspace = true }
+code-review-agent = { workspace = true }
+
+[tool.uv.workspace]
+members = [
+    "01-research-report-crew",
+    "02-support-ticket-triage-flow",
+    "03-code-review-agent",
+]

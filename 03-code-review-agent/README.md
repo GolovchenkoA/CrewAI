@@ -15,7 +15,7 @@ A lead reviewer merges the findings into one prioritised comment. The service ru
 | Aspect | Where |
 |---|---|
 | Planning mode (`planning=True`) | crew config |
-| `crewai train` and `crewai test` (evaluation of runs) | `Makefile` / commands below |
+| `crewai train` and `crewai test` (evaluation of runs) | commands below |
 | Event listeners and callbacks (`BaseEventListener`) | `listeners.py` |
 | Observability (OpenTelemetry / Langfuse, optional) | `observability.py` |
 | Token and cost tracking (`usage_metrics`) | logged per review |
@@ -29,29 +29,31 @@ A lead reviewer merges the findings into one prioritised comment. The service ru
 
 ## 3. Prepare, build, run
 
-Requirements: Python **3.12 or 3.13** (CrewAI 1.15.x requires `>=3.10,<3.14`), Docker (optional), an Anthropic API key **or** Ollama. Posting comments needs a GitHub token (`GITHUB_TOKEN`, scope `pull_requests:write`); without it the review is only printed.
+This project is a member of the **uv workspace** in the repository root: one shared `.venv` and one `uv.lock` for all three projects. For first-time setup on a new computer (installing uv, Ollama, cloning) see the [root README](../README.md#setting-up-on-another-computer).
 
-### Create the virtual environment and install
+Requirements: [uv](https://docs.astral.sh/uv/) (it downloads Python 3.12 automatically, pinned by the root `.python-version`; CrewAI 1.15.x does not support Python 3.14), Docker (optional), an Anthropic API key **or** Ollama. Posting comments needs a GitHub token (`GITHUB_TOKEN`, scope `pull_requests:write`); without it the review is only printed.
+
+### Install dependencies
+
+Run `uv sync` once from the **repository root**, then create this project's `.env`.
 
 **Windows (PowerShell)**
 ```powershell
+cd <repo-root>
+uv sync                                  # or: uv sync --package code-review-agent
 cd 03-code-review-agent
-py -3.12 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install -r requirements.txt
 Copy-Item .env.example .env
 ```
 
 **Linux / macOS**
 ```bash
+cd <repo-root>
+uv sync                                  # or: uv sync --package code-review-agent
 cd 03-code-review-agent
-python3.12 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-pip install -r requirements.txt
 cp .env.example .env
 ```
+
+No manual activation is needed; prefix commands with `uv run`. To activate the shared environment anyway: `..\.venv\Scripts\Activate.ps1` (Windows) or `source ../.venv/bin/activate` (Linux).
 
 ### Choose the LLM (edit `.env`)
 
@@ -64,24 +66,26 @@ Large diffs overflow small local context windows; the service chunks diffs per f
 
 ### Run
 
-Review a local diff (no GitHub needed):
+From `03-code-review-agent/`. Review a local diff (no GitHub needed):
 ```bash
-python -m code_review.main --diff samples/example.diff
+uv run python -m code_review.main --diff samples/example.diff
 ```
 
 Run the webhook service:
 ```bash
-uvicorn code_review.api:app --host 0.0.0.0 --port 8080
+uv run uvicorn code_review.api:app --host 0.0.0.0 --port 8080
 curl -X POST http://localhost:8080/review -H "Content-Type: application/json" -d @samples/pr_event.json
 ```
 
 Train and evaluate:
 ```bash
-crewai train -n 3 -f training.pkl
-crewai test -n 2 -m anthropic/claude-sonnet-5-5
+uv run crewai train -n 3 -f training.pkl
+uv run crewai test -n 2 -m anthropic/claude-sonnet-5-5
 ```
 
 ### Docker
+
+The image installs from the workspace lock file, so the Docker build context is the **repository root**:
 
 ```bash
 docker compose up --build        # service on http://localhost:8080

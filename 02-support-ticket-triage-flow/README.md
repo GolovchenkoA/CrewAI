@@ -33,29 +33,31 @@ The MCP server is written in Python (FastMCP) so the project runs without extra 
 
 ## 3. Prepare, build, run
 
-Requirements: Python **3.12 or 3.13** (CrewAI 1.15.x requires `>=3.10,<3.14`), an Anthropic API key **or** Ollama.
+This project is a member of the **uv workspace** in the repository root: one shared `.venv` and one `uv.lock` for all three projects. For first-time setup on a new computer (installing uv, Ollama, cloning) see the [root README](../README.md#setting-up-on-another-computer).
 
-### Create the virtual environment and install
+Requirements: [uv](https://docs.astral.sh/uv/) (it downloads Python 3.12 automatically, pinned by the root `.python-version`; CrewAI 1.15.x does not support Python 3.14), and an Anthropic API key **or** Ollama.
+
+### Install dependencies
+
+Run `uv sync` once from the **repository root**, then create this project's `.env`.
 
 **Windows (PowerShell)**
 ```powershell
+cd <repo-root>
+uv sync                                  # or: uv sync --package support-ticket-triage-flow
 cd 02-support-ticket-triage-flow
-py -3.12 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install -r requirements.txt
 Copy-Item .env.example .env
 ```
 
 **Linux / macOS**
 ```bash
+cd <repo-root>
+uv sync                                  # or: uv sync --package support-ticket-triage-flow
 cd 02-support-ticket-triage-flow
-python3.12 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-pip install -r requirements.txt
 cp .env.example .env
 ```
+
+No manual activation is needed; prefix commands with `uv run`. To activate the shared environment anyway: `..\.venv\Scripts\Activate.ps1` (Windows) or `source ../.venv/bin/activate` (Linux).
 
 ### Choose the LLM and embeddings (edit `.env`)
 
@@ -73,12 +75,13 @@ Local (`LLM_PROVIDER=local`): start Ollama with a larger context:
 
 ### Run
 
+From `02-support-ticket-triage-flow/`:
 ```bash
-crewai flow kickoff                                   # runs sample tickets in data/tickets/
-python -m triage_flow.main --ticket data/tickets/billing_01.json
-crewai flow plot                                      # writes flow diagram HTML
+uv run crewai flow kickoff                                # runs sample tickets in data/tickets/
+uv run python -m triage_flow.main --ticket data/tickets/billing_01.json
+uv run crewai flow plot                                   # writes flow diagram HTML
 ```
 
-The MCP server is started automatically over stdio by the flow. To run it by hand: `python mcp_server/ticket_server.py`.
+The MCP server is started automatically over stdio by the flow. To run it by hand: `uv run python mcp_server/ticket_server.py`.
 
 > Use Claude for the classifier/router if the local model misclassifies; routing quality depends heavily on structured-output reliability.
