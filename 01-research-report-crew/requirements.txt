@@ -1,0 +1,2 @@
+crewai[litellm,anthropic,tools]==1.15.41
+python-dotenv>=1.0
