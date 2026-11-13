@@ -83,8 +83,9 @@ Start Ollama with a larger context, because the default (4096) is too small for 
 
 From `01-research-report-crew/`:
 ```bash
-uv run crewai run                                         # uses TOPIC from .env
-uv run python -m research_crew.main --topic "LangGraph vs CrewAI"
+uv run research_crew_run                                  # runs the crew
+uv run research_crew_train 3 training.pkl                 # crewai train equivalent
+uv run research_crew_test 2 anthropic/claude-sonnet-5-5   # crewai test equivalent
 ```
 Results are written to `output/`. To run the hierarchical variant set `PROCESS=hierarchical` in `.env`.
 

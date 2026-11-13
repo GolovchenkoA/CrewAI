@@ -82,3 +82,7 @@ docker-compose.override.yml
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# crewai create crew 01-init --classic
+init_01/
+init_01/**

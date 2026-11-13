@@ -8,6 +8,16 @@ dependencies = [
     "python-dotenv>=1.0",
 ]
 
+# Script names are project-specific: all workspace members share one .venv,
+# so generic names (run_crew, train, test, replay) would collide with project 03.
+[project.scripts]
+research_crew = "research_crew.main:run"
+research_crew_run = "research_crew.main:run"
+research_crew_train = "research_crew.main:train"
+research_crew_replay = "research_crew.main:replay"
+research_crew_test = "research_crew.main:test"
+research_crew_trigger = "research_crew.main:run_with_trigger"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
