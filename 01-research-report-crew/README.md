@@ -6,7 +6,7 @@ A crew of four agents that takes a topic (e.g. "LangGraph vs CrewAI") and produc
 
 `Researcher -> Analyst -> Writer -> Editor`
 
-- **Researcher** gathers facts (web search + local notes folder).
+- **Researcher** gathers facts by scraping the pages listed in `SOURCE_URLS` and reading a local notes folder.
 - **Analyst** compares findings and extracts a structured list of claims (Pydantic).
 - **Writer** drafts the report from the analysis.
 - **Editor** checks the draft, and a guardrail rejects it until it has the required sections.
@@ -22,7 +22,7 @@ Output: `output/report.md` plus `output/analysis.json`.
 | YAML config + `@CrewBase` decorators | `crew.py` |
 | Sequential process, then hierarchical process with a manager agent | `PROCESS` env switch |
 | Delegation (`allow_delegation`) | Researcher / Editor |
-| Built-in tools (`SerperDevTool` or `DuckDuckGoSearchRun`, `FileReadTool`, `DirectoryReadTool`) | Researcher |
+| Built-in tools (`ScrapeWebsiteTool`, `FileReadTool`, `DirectoryReadTool`) | Researcher |
 | Custom tool (`@tool`) | `tools/word_count.py` |
 | Structured output (`output_pydantic`) | Analyst |
 | Async tasks (`async_execution`) | parallel research subtopics |
