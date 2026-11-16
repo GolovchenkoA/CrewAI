@@ -1,17 +1,60 @@
-research_task:
+notes_research_task:
   description: >
-    Conduct a thorough research about {topic}
-    Make sure you find any interesting and relevant information given
-    the current year is {current_year}.
+    Research {topic} using ONLY the local notes in the folder "{notes_dir}".
+    First list the folder, then read the files that look relevant.
+    Report each fact together with the file name it came from.
+    If the notes contain nothing relevant, say so clearly.
   expected_output: >
-    A list with 10 bullet points of the most relevant information about {topic}
+    A bullet list (up to 10 items) of facts about {topic}, each ending with
+    "(source: <file name>)".
   agent: researcher
 
-reporting_task:
+web_research_task:
   description: >
-    Review the context you got and expand each topic into a full section for a report.
-    Make sure the report is detailed and contains any and all relevant information.
+    Research {topic} by reading these web pages (comma separated): {source_urls}
+    Read every page with the scrape tool, one call per URL.
+    Report each fact together with the page URL it came from.
   expected_output: >
-    A fully fledged report with the main topics, each with a full section of information.
-    Formatted as markdown without '```'
-  agent: reporting_analyst
+    A bullet list (up to 10 items) of facts about {topic}, each ending with
+    "(source: <URL>)".
+  agent: web_scout
+
+analysis_task:
+  description: >
+    Combine the notes research and the web research about {topic}.
+    Merge duplicates, drop unsupported statements and rate each claim's
+    confidence (high, medium, low). List open questions the sources do not answer.
+  expected_output: >
+    A structured analysis: topic, a three-sentence summary, a list of claims
+    (statement, evidence, source, confidence) and open questions.
+  agent: analyst
+  context:
+    - notes_research_task
+    - web_research_task
+  output_file: "{output_dir}/analysis.json"
+
+writing_task:
+  description: >
+    Write a Markdown report about {topic} for software engineers, based only on
+    the analysis. Use these headings: "Executive Summary", "Key Findings",
+    "Conclusion", "Sources". Put a source in brackets after each finding.
+  expected_output: >
+    A Markdown report of 300-600 words with the four required headings and a
+    title line starting with "# ".
+  agent: writer
+  context:
+    - analysis_task
+
+editing_task:
+  description: >
+    Edit the report about {topic}. Fix structure and wording, keep all four
+    headings ("Executive Summary", "Key Findings", "Conclusion", "Sources"),
+    keep every source reference, and check the length with the Word Count tool.
+    Return ONLY the final Markdown report, without code fences or comments.
+  expected_output: >
+    The final polished Markdown report starting with a "# " title line.
+  agent: editor
+  context:
+    - writing_task
+    - analysis_task
+  output_file: "{output_dir}/report.md"

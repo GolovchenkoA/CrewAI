@@ -86,3 +86,5 @@ desktop.ini
 # crewai create crew 01-init --classic
 init_01/
 init_01/**
+# pytest storage created by CREWAI_STORAGE_DIR in tests/conftest.py
+.crewai-test-storage/

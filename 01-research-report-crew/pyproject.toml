@@ -16,7 +16,6 @@ research_crew_run = "research_crew.main:run"
 research_crew_train = "research_crew.main:train"
 research_crew_replay = "research_crew.main:replay"
 research_crew_test = "research_crew.main:test"
-research_crew_trigger = "research_crew.main:run_with_trigger"
 
 [build-system]
 requires = ["hatchling"]
@@ -27,3 +26,8 @@ packages = ["src/research_crew"]
 
 [tool.crewai]
 type = "crew"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]
