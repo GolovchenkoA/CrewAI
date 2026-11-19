@@ -10,6 +10,7 @@ from dotenv import find_dotenv, load_dotenv
 load_dotenv(find_dotenv(usecwd=True))
 
 from triage_flow.flow import TriageFlow, build_flow
+from triage_flow.usage_tracker import UsageTracker
 
 TICKET_FIELDS = ("ticket_id", "customer_id", "subject", "body")
 
@@ -43,6 +44,7 @@ def kickoff(argv: list[str] | None = None) -> None:
             "No tickets found (run from the project folder or pass --ticket FILE)."
         )
 
+    tracker = UsageTracker()  # counts tokens per crew and agent over all tickets of this run
     for path in paths:
         flow = build_flow()
         flow.kickoff(inputs=load_ticket(path))
@@ -52,6 +54,7 @@ def kickoff(argv: list[str] | None = None) -> None:
             f"{s.ticket_id}: {s.category} ({s.confidence:.2f}), {s.sentiment}/{s.urgency}, {review} "
             f"-> output/{s.ticket_id}/reply.md"
         )
+    print(tracker.report())
     # must return None: console scripts do sys.exit(kickoff())
 
 

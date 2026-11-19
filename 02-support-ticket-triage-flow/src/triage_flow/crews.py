@@ -57,8 +57,9 @@ def _task(key: str, agent: Agent, **kwargs) -> Task:
     return Task(config=_config("tasks.yaml")[key], agent=agent, **kwargs)
 
 
-def _crew(agent: Agent, task: Task) -> Crew:
+def _crew(name: str, agent: Agent, task: Task) -> Crew:
     return Crew(
+        name=name,  # the "team" label in the token usage report
         agents=[agent],
         tasks=[task],
         process=Process.sequential,
@@ -79,12 +80,12 @@ def ticket_inputs(state) -> dict:
 
 def classifier_crew() -> Crew:
     agent = _agent("classifier")
-    return _crew(agent, _task("classify_task", agent, output_pydantic=Classification))
+    return _crew("classifier_crew", agent, _task("classify_task", agent, output_pydantic=Classification))
 
 
 def sentiment_crew() -> Crew:
     agent = _agent("sentiment_analyst")
-    return _crew(agent, _task("sentiment_task", agent, output_pydantic=Sentiment))
+    return _crew("sentiment_crew", agent, _task("sentiment_task", agent, output_pydantic=Sentiment))
 
 
 def ticket_mcp_server(allowed_tools: list[str]) -> MCPServerStdio:
@@ -113,4 +114,4 @@ def specialist_crew(category: str) -> Crew:
         ]
         kwargs["embedder"] = llm_factory.embedder_config()
     agent = _agent(spec["agent"], **kwargs)
-    return _crew(agent, _task(spec["task"], agent))
+    return _crew(f"{category}_crew", agent, _task(spec["task"], agent))
