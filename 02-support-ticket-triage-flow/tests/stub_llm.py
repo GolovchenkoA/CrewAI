@@ -59,10 +59,9 @@ import json
 from collections.abc import Callable
 from typing import Any
 
-from pydantic import BaseModel, Field, PrivateAttr
-
 from crewai import BaseLLM
 from crewai.llms.base_llm import llm_call_context
+from pydantic import BaseModel, Field, PrivateAttr
 
 
 def tool_call(

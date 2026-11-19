@@ -2,9 +2,9 @@ import json
 from pathlib import Path
 
 import pytest
-
 from stub_llm import StubLLM, prompt_text
-from triage_flow import crews, flow as flow_module, llm_factory
+from triage_flow import crews, llm_factory
+from triage_flow import flow as flow_module
 
 SPECIALIST_ROLES = {
     "billing": "Billing Support Specialist",

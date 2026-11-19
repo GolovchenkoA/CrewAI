@@ -7,7 +7,7 @@ _STORE = Path(__file__).parent / ".crewai-test-storage"
 os.environ["CREWAI_STORAGE_DIR"] = str(_STORE)
 os.environ["FLOW_DB"] = str(_STORE / "flow_states.db")
 
-import pytest  # noqa: E402
+import pytest
 
 
 @pytest.fixture(autouse=True)

@@ -14,7 +14,7 @@ warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 
 load_dotenv(find_dotenv(usecwd=True))
 
-from research_crew.crew import ResearchCrew  # noqa: E402  (after load_dotenv)
+from research_crew.crew import ResearchCrew
 
 DEFAULT_TOPIC = "LangGraph vs CrewAI"
 

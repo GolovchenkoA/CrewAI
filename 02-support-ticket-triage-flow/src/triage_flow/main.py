@@ -9,7 +9,7 @@ from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv(usecwd=True))
 
-from triage_flow.flow import TriageFlow, build_flow  # noqa: E402  (after load_dotenv: env is read at import)
+from triage_flow.flow import TriageFlow, build_flow
 
 TICKET_FIELDS = ("ticket_id", "customer_id", "subject", "body")
 

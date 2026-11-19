@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 
 from crewai import Process
-
 from research_crew.crew import ResearchCrew
 from research_crew.main import build_inputs
 from research_crew.models import Analysis

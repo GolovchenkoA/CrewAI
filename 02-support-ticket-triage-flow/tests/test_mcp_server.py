@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pytest
-
 from triage_flow import mcp_server
 
 DATA = Path(__file__).resolve().parents[1] / "data"

@@ -5,7 +5,6 @@ Every crew is built fresh per call, so each run gets new LLM objects and a new M
 """
 
 import os
-import sys
 from pathlib import Path
 
 import yaml

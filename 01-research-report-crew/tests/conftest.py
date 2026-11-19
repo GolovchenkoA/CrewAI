@@ -5,7 +5,7 @@ from pathlib import Path
 # Must be set before crewai is imported: SQLite/memory files go here, not into the user data dir.
 os.environ["CREWAI_STORAGE_DIR"] = str(Path(__file__).parent / ".crewai-test-storage")
 
-import pytest  # noqa: E402
+import pytest
 
 
 @pytest.fixture(autouse=True)

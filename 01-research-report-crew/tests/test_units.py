@@ -1,6 +1,5 @@
 import pytest
 from crewai import TaskOutput
-
 from research_crew.guardrails import report_guardrail
 from research_crew.llm_factory import env_bool, make_llm
 from research_crew.main import build_inputs, slugify
