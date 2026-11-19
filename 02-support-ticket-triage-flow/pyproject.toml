@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Event-driven CrewAI flow that triages support tickets"
 requires-python = ">=3.12,<3.14"
 dependencies = [
-    "crewai[litellm,anthropic,tools]>=1.15.41,<2",
+    "crewai[anthropic,tools]>=1.15.41,<2",
     "mcp>=1.2",
     "fastapi>=0.115",
     "uvicorn>=0.30",

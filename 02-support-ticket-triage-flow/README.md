@@ -27,7 +27,7 @@ Output: a draft reply and a ticket record in `output/`.
 | Structured output (`output_pydantic`) | classification result |
 | Flow persistence (`@persist`) | resume after restart |
 | Flow plot (`flow.plot()`) | architecture diagram |
-| LiteLLM, Claude / local switch | `llm_factory.py` |
+| Claude / local LLM switch (native providers) | `llm_factory.py` |
 
 The MCP server is written in Python (FastMCP) so the project runs without extra tooling. Because you work with Spring Boot, the README of `mcp_server/` also describes swapping it for a Spring AI MCP server that exposes the same tools (`get_ticket`, `search_orders`, `get_customer`).
 

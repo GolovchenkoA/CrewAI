@@ -14,7 +14,7 @@ You are setting up this repository on the current computer so I can build and ru
   - `03-code-review-agent` (package `code-review-agent`, code in `src/code_review`)
 - Python is pinned by `.python-version` to **3.12**. CrewAI 1.15.x requires Python `>=3.10,<3.14`, so Python 3.14 must never be used.
 - Dependencies live in each `pyproject.toml` and in the root `uv.lock`. There are **no** `requirements.txt` files; do not create any.
-- LLMs are switched per project with `LLM_PROVIDER=claude|local` in that project's `.env`, via LiteLLM:
+- LLMs are switched per project with `LLM_PROVIDER=claude|local` in that project's `.env`:
   - Claude: `anthropic/claude-sonnet-5-5`, needs `ANTHROPIC_API_KEY`.
   - Local: Ollama model `ollama/qwen3.5:9b` (fits 8 GB VRAM, 30 GB RAM machine). Embeddings for Memory/Knowledge always use local `mxbai-embed-large`, because Claude has no embedding model.
 - The Python code of the projects is not implemented yet. Each `src/<package>/` is an empty skeleton. Do not write project code in this task.
@@ -49,7 +49,7 @@ From the root run `uv sync --locked`. If it fails because `uv.lock` is out of da
 ```
 uv run python --version          # must print 3.12.x
 uv run crewai version
-uv run python -c "import litellm, anthropic, mcp, fastapi; print('imports ok')"
+uv run python -c "import anthropic, mcp, fastapi; print('imports ok')"
 ```
 
 Check that `.venv` was created in the root and that no `.venv` exists inside the member folders.
@@ -103,5 +103,5 @@ Print a short table: step, status (done / already done / skipped / failed), and 
 Never run this unprompted. When I ask to start implementing project N:
 
 1. Generate the CrewAI scaffold in a scratch folder **outside** the repository (`uv run crewai create crew <name>` for projects 01 and 03, `uv run crewai create flow <name>` for project 02). Run `uv run crewai create --help` first and do not use `CREWAI_DMN` or other undocumented switches.
-2. Inspect the generated files before editing, then merge them into the existing member folder. Keep the member's `pyproject.toml` name, `requires-python = ">=3.12,<3.14"`, the `crewai[litellm,anthropic,tools]` dependency and the extra dependencies already listed, and the existing `src/<package>` folder name. Adopt from the scaffold: `config/*.yaml`, `crew.py`/`main.py`, `[tool.crewai]` and the `[project.scripts]` entry points.
+2. Inspect the generated files before editing, then merge them into the existing member folder. Keep the member's `pyproject.toml` name, `requires-python = ">=3.12,<3.14"`, the `crewai[anthropic,tools]` dependency and the extra dependencies already listed, and the existing `src/<package>` folder name. Adopt from the scaffold: `config/*.yaml`, `crew.py`/`main.py`, `[tool.crewai]` and the `[project.scripts]` entry points.
 3. After merging, run `uv sync` from the **repository root** (never `crewai install`), then `uv run crewai run` (or `uv run crewai flow kickoff` for project 02) from the member folder.

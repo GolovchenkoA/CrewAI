@@ -2,7 +2,7 @@
 
 Three hands-on projects that together cover the main aspects of [CrewAI](https://docs.crewai.com). They form one [uv workspace](https://docs.astral.sh/uv/concepts/projects/workspaces/): a single shared virtual environment (`.venv`) and a single lock file (`uv.lock`) in this folder, so dependencies are downloaded once, not per project.
 
-All projects use Python 3.12 (CrewAI 1.15.x does not support 3.14) and can switch between Claude and a local Ollama model via LiteLLM with `LLM_PROVIDER=claude|local`.
+All projects use Python 3.12 (CrewAI 1.15.x does not support 3.14) and can switch between Claude and a local Ollama model with `LLM_PROVIDER=claude|local`.
 
 | Project | What it does | Main CrewAI topics |
 |---|---|---|

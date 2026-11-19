@@ -25,7 +25,7 @@ A lead reviewer merges the findings into one prioritised comment. The service ru
 | Task guardrails | reject comments without file/line refs |
 | Custom tools (git diff parser, repo file reader) | `tools/` |
 | Containerised deployment | `Dockerfile`, `docker-compose.yml` |
-| LiteLLM, Claude / local switch | `llm_factory.py` |
+| Claude / local LLM switch (native providers) | `llm_factory.py` |
 
 ## 3. Prepare, build, run
 
