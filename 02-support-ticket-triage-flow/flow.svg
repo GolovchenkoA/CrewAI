@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1050" width="900" height="1050" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <title>Support ticket triage flow</title>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#555"/>
+    </marker>
+    <style>
+      .t  { font-size: 14px; font-weight: 600; fill: #1a1a1a; text-anchor: middle; }
+      .s  { font-size: 11px; fill: #444; text-anchor: middle; }
+      .l  { font-size: 12px; font-style: italic; fill: #333; text-anchor: middle; }
+      .e  { fill: none; stroke: #555; stroke-width: 1.6; marker-end: url(#arrow); }
+      .lg { font-size: 12px; fill: #333; }
+    </style>
+  </defs>
+
+  <rect width="900" height="1050" fill="#ffffff"/>
+
+  <!-- edges -->
+  <path class="e" d="M450,76 V105 H300 V134"/>
+  <path class="e" d="M450,76 V105 H600 V134"/>
+  <path class="e" d="M300,186 V215 H450 V245"/>
+  <path d="M600,186 V215 H450" fill="none" stroke="#555" stroke-width="1.6"/>
+  <path class="e" d="M450,335 V360 H230 V384"/>
+  <path class="e" d="M450,335 V384"/>
+  <path class="e" d="M450,335 V360 H670 V384"/>
+  <path class="e" d="M230,436 V465 H450 V495"/>
+  <path class="e" d="M450,436 V495"/>
+  <path d="M670,436 V465 H450" fill="none" stroke="#555" stroke-width="1.6"/>
+  <path class="e" d="M350,540 H270 V664"/>
+  <path class="e" d="M550,540 H630 V664"/>
+  <path class="e" d="M630,716 V764"/>
+  <path class="e" d="M270,716 V845 H450 V874"/>
+  <path d="M630,816 V845 H450" fill="none" stroke="#555" stroke-width="1.6"/>
+
+  <!-- edge labels -->
+  <text x="480" y="209" class="l">and_</text>
+  <text x="340" y="355" class="l">billing</text>
+  <text x="560" y="355" class="l">how_to</text>
+  <text x="472" y="365" class="l" text-anchor="start" style="text-anchor:start">bug</text>
+  <text x="520" y="460" class="l">or_</text>
+  <text x="310" y="531" class="l">auto_send</text>
+  <text x="590" y="531" class="l">human_review</text>
+  <text x="540" y="840" class="l">or_</text>
+
+  <!-- start -->
+  <rect x="365" y="24" width="170" height="52" rx="8" fill="#d8f0dc" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="450" y="46" class="t">ingest</text>
+  <text x="450" y="63" class="s">@start · Memory recall</text>
+
+  <!-- parallel crews -->
+  <rect x="200" y="134" width="200" height="52" rx="8" fill="#dbe9fb" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="300" y="156" class="t">classify</text>
+  <text x="300" y="173" class="s">classifier crew → Classification</text>
+  <rect x="500" y="134" width="200" height="52" rx="8" fill="#dbe9fb" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="600" y="156" class="t">analyze_sentiment</text>
+  <text x="600" y="173" class="s">sentiment crew → Sentiment</text>
+  <text x="450" y="124" class="l" style="fill:#666">parallel</text>
+
+  <!-- routers -->
+  <polygon points="450,245 540,290 450,335 360,290" fill="#ece0f7" stroke="#6a1b9a" stroke-width="1.5"/>
+  <text x="450" y="287" class="t">route</text>
+  <text x="450" y="303" class="s">@router · category</text>
+
+  <polygon points="450,495 550,540 450,585 350,540" fill="#ece0f7" stroke="#6a1b9a" stroke-width="1.5"/>
+  <text x="450" y="537" class="t">review_gate</text>
+  <text x="450" y="553" class="s">@router · confidence</text>
+
+  <!-- specialists -->
+  <rect x="130" y="384" width="200" height="52" rx="8" fill="#dbe9fb" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="230" y="406" class="t">handle_billing</text>
+  <text x="230" y="423" class="s">MCP orders + billing Knowledge</text>
+  <rect x="350" y="384" width="200" height="52" rx="8" fill="#dbe9fb" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="450" y="406" class="t">handle_bug</text>
+  <text x="450" y="423" class="s">MCP customer + ticket</text>
+  <rect x="570" y="384" width="200" height="52" rx="8" fill="#dbe9fb" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="670" y="406" class="t">handle_howto</text>
+  <text x="670" y="423" class="s">product docs Knowledge</text>
+
+  <!-- confidence outcomes -->
+  <rect x="170" y="664" width="200" height="52" rx="8" fill="#eceff1" stroke="#455a64" stroke-width="1.5"/>
+  <text x="270" y="686" class="t">publish_auto</text>
+  <text x="270" y="703" class="s">draft becomes the reply</text>
+  <rect x="520" y="664" width="220" height="52" rx="8" fill="#ffe8cc" stroke="#e65100" stroke-width="1.5"/>
+  <text x="630" y="686" class="t">request_review</text>
+  <text x="630" y="703" class="s">@human_feedback · shows the draft</text>
+  <rect x="520" y="764" width="220" height="52" rx="8" fill="#ffe8cc" stroke="#e65100" stroke-width="1.5"/>
+  <text x="630" y="786" class="t">apply_review</text>
+  <text x="630" y="803" class="s">Enter = approve, text = edited reply</text>
+
+  <!-- finish -->
+  <rect x="350" y="874" width="200" height="52" rx="8" fill="#d8f0dc" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="450" y="896" class="t">finalize</text>
+  <text x="450" y="913" class="s">reply.md · ticket.json · Memory</text>
+
+  <!-- legend -->
+  <g transform="translate(120,985)">
+    <rect x="0" y="0" width="22" height="14" rx="3" fill="#d8f0dc" stroke="#2e7d32"/><text x="30" y="12" class="lg">start / finish</text>
+    <rect x="150" y="0" width="22" height="14" rx="3" fill="#dbe9fb" stroke="#1565c0"/><text x="180" y="12" class="lg">crew call</text>
+    <polygon points="290,7 301,0 312,7 301,14" fill="#ece0f7" stroke="#6a1b9a"/><text x="320" y="12" class="lg">router</text>
+    <rect x="400" y="0" width="22" height="14" rx="3" fill="#ffe8cc" stroke="#e65100"/><text x="430" y="12" class="lg">human in the loop</text>
+    <rect x="570" y="0" width="22" height="14" rx="3" fill="#eceff1" stroke="#455a64"/><text x="600" y="12" class="lg">plain step</text>
+  </g>
+</svg>

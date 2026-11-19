@@ -1,0 +1,6 @@
+{
+  "ticket_id": "T-1003",
+  "customer_id": "C-200",
+  "subject": "How do I create an API key?",
+  "body": "Hello, I would like to call your API from a script. Where can I create an API key and how do I use it?"
+}

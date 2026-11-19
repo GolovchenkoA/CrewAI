@@ -1,0 +1,59 @@
+classify_task:
+  description: >
+    Classify this support ticket.
+
+    Subject: {subject}
+    Body: {body}
+  expected_output: >
+    The category (billing, bug or how-to), a confidence between 0 and 1, and one sentence of reasoning.
+
+sentiment_task:
+  description: >
+    Rate the customer's sentiment and the urgency of this ticket.
+
+    Subject: {subject}
+    Body: {body}
+  expected_output: >
+    The sentiment (positive, neutral, negative) and the urgency (low, medium, high).
+
+billing_task:
+  description: >
+    Write the reply to this billing ticket.
+
+    Ticket {ticket_id} from customer {customer_id}
+    Subject: {subject}
+    Body: {body}
+
+    Earlier contact with this customer: {customer_context}
+
+    Use your tools to read the customer's orders, then answer from the real data and the billing policy.
+  expected_output: >
+    A short, polite reply (under 150 words) that states what you found in the orders and what happens next.
+
+bug_task:
+  description: >
+    Write the reply to this bug report.
+
+    Ticket {ticket_id} from customer {customer_id}
+    Subject: {subject}
+    Body: {body}
+
+    Earlier contact with this customer: {customer_context}
+
+    Use your tools to read the customer's profile and answer for their plan.
+  expected_output: >
+    A short, polite reply (under 150 words) that acknowledges the problem and lists the details still needed.
+
+howto_task:
+  description: >
+    Write the reply to this how-to question.
+
+    Ticket {ticket_id} from customer {customer_id}
+    Subject: {subject}
+    Body: {body}
+
+    Earlier contact with this customer: {customer_context}
+
+    Answer only from the product documentation you were given.
+  expected_output: >
+    A short reply (under 150 words) with numbered steps taken from the documentation.

@@ -1,0 +1,7 @@
+[
+  {"order_id": "O-1001", "customer_id": "C-100", "date": "2026-10-01", "amount": 49.0, "currency": "EUR", "status": "paid", "description": "Pro plan, October"},
+  {"order_id": "O-1002", "customer_id": "C-100", "date": "2026-11-01", "amount": 49.0, "currency": "EUR", "status": "paid", "description": "Pro plan, November"},
+  {"order_id": "O-1003", "customer_id": "C-100", "date": "2026-11-01", "amount": 49.0, "currency": "EUR", "status": "paid", "description": "Pro plan, November (duplicate charge)"},
+  {"order_id": "O-2001", "customer_id": "C-200", "date": "2026-11-05", "amount": 0.0, "currency": "EUR", "status": "paid", "description": "Free plan"},
+  {"order_id": "O-3001", "customer_id": "C-300", "date": "2026-11-03", "amount": 1200.0, "currency": "EUR", "status": "refunded", "description": "Enterprise seats, November"}
+]

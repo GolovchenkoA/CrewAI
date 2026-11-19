@@ -1,0 +1,6 @@
+{
+  "ticket_id": "T-1002",
+  "customer_id": "C-300",
+  "subject": "CSV export crashes with a 500 error",
+  "body": "Every time I export the dashboard as CSV I get 'Internal Server Error 500'. It worked last week. Browser: Chrome 131, about 40k rows. This blocks our monthly reporting."
+}

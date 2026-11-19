@@ -1,0 +1,5 @@
+[
+  {"customer_id": "C-100", "name": "Anna Kowalska", "plan": "pro", "email": "anna@example.com", "since": "2023-04-12"},
+  {"customer_id": "C-200", "name": "Tom Becker", "plan": "free", "email": "tom@example.com", "since": "2025-09-02"},
+  {"customer_id": "C-300", "name": "Mei Lin", "plan": "enterprise", "email": "mei@example.com", "since": "2022-01-20"}
+]
