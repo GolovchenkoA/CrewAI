@@ -18,5 +18,12 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/triage_flow"]
 
+# Script names are project-specific: all workspace members share one .venv,
+# so generic names (kickoff, plot, run_crew) would collide with the other projects.
+[project.scripts]
+triage_flow_kickoff = "triage_flow.main:kickoff"
+triage_flow_plot = "triage_flow.main:plot"
+triage_flow_trigger = "triage_flow.main:run_with_trigger"
+
 [tool.crewai]
 type = "flow"

@@ -77,11 +77,12 @@ Local (`LLM_PROVIDER=local`): start Ollama with a larger context:
 
 From `02-support-ticket-triage-flow/`:
 ```bash
-uv run crewai flow kickoff                                # runs sample tickets in data/tickets/
-uv run python -m triage_flow.main --ticket data/tickets/billing_01.json
-uv run crewai flow plot                                   # writes flow diagram HTML
+uv run triage_flow_kickoff                                # runs the flow
+uv run triage_flow_plot                                   # writes flow diagram HTML
 ```
 
 The MCP server is started automatically over stdio by the flow. To run it by hand: `uv run python mcp_server/ticket_server.py`.
+
+> `crewai flow kickoff` / `crewai run` are not used: they call fixed script names that would collide between the workspace projects, so this project has its own `triage_flow_*` scripts.
 
 > Use Claude for the classifier/router if the local model misclassifies; routing quality depends heavily on structured-output reliability.
