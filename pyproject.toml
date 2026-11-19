@@ -24,3 +24,6 @@ members = [
     "02-support-ticket-triage-flow",
     "03-code-review-agent",
 ]
+
+[dependency-groups]
+dev = ["ruff>=0.15"]
