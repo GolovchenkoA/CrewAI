@@ -1,88 +1,47 @@
-#!/usr/bin/env python
+"""Entry points: triage_flow_kickoff / triage_flow_plot."""
+import argparse
+import json
+import sys
 from pathlib import Path
 
-from pydantic import BaseModel
+from dotenv import find_dotenv, load_dotenv
 
-from crewai.flow import Flow, listen, start
+load_dotenv(find_dotenv(usecwd=True))
 
-from triage_flow.crews.content_crew.content_crew import ContentCrew
+from triage_flow.flow import TriageFlow, build_flow  # noqa: E402  (after load_dotenv: env is read at import)
 
-
-class ContentState(BaseModel):
-    topic: str = "AI Agents"
-    outline: str = ""
-    draft: str = ""
-    final_post: str = ""
+TICKET_FIELDS = ("ticket_id", "customer_id", "subject", "body")
 
 
-class ContentFlow(Flow[ContentState]):
-
-    @start()
-    def plan_content(self, crewai_trigger_payload: dict = None):
-        print("Planning content")
-
-        if crewai_trigger_payload:
-            self.state.topic = crewai_trigger_payload.get("topic", self.state.topic)
-            print(f"Using trigger payload: {crewai_trigger_payload}")
-
-        print(f"Topic: {self.state.topic}")
-
-    @listen(plan_content)
-    def generate_content(self):
-        print(f"Generating content on: {self.state.topic}")
-        result = (
-            ContentCrew()
-            .crew()
-            .kickoff(inputs={"topic": self.state.topic})
-        )
-
-        print("Content generated")
-        self.state.final_post = result.raw
-
-    @listen(generate_content)
-    def save_content(self):
-        print("Saving content")
-        output_dir = Path("output")
-        output_dir.mkdir(exist_ok=True)
-        with open(output_dir / "post.md", "w") as f:
-            f.write(self.state.final_post)
-        print("Post saved to output/post.md")
-        return self.state.final_post
+def load_ticket(path: Path) -> dict:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return {k: data[k] for k in TICKET_FIELDS}
 
 
-def kickoff():
-    content_flow = ContentFlow()
-    content_flow.kickoff()
+def kickoff(argv: list[str] | None = None) -> None:
+    """Triage tickets: all of data/tickets/*.json, or the files given with --ticket."""
+    parser = argparse.ArgumentParser(description="Triage support tickets")
+    parser.add_argument("--ticket", action="append", type=Path, help="ticket JSON file (repeatable)")
+    parser.add_argument("--auto", action="store_true", help="approve low-confidence drafts without asking")
+    args = parser.parse_args(sys.argv[1:] if argv is None else argv)
+
+    if args.auto:
+        import os
+        os.environ["HITL_MODE"] = "auto"
+
+    paths = args.ticket or sorted(Path("data/tickets").glob("*.json"))
+    if not paths:
+        sys.exit("No tickets found (run from the project folder or pass --ticket FILE).")
+
+    for path in paths:
+        flow = build_flow()
+        flow.kickoff(inputs=load_ticket(path))
+        s = flow.state
+        review = "human-reviewed" if s.human_reviewed else "auto"
+        print(f"{s.ticket_id}: {s.category} ({s.confidence:.2f}), {s.sentiment}/{s.urgency}, {review} "
+              f"-> output/{s.ticket_id}/reply.md")
+    # must return None: console scripts do sys.exit(kickoff())
 
 
-def plot():
-    content_flow = ContentFlow()
-    content_flow.plot()
-
-
-def run_with_trigger():
-    """
-    Run the flow with trigger payload.
-    """
-    import json
-    import sys
-
-    if len(sys.argv) < 2:
-        raise Exception("No trigger payload provided. Please provide JSON payload as argument.")
-
-    try:
-        trigger_payload = json.loads(sys.argv[1])
-    except json.JSONDecodeError:
-        raise Exception("Invalid JSON payload provided as argument")
-
-    content_flow = ContentFlow()
-
-    try:
-        # Not returned: this is a console script, and a non-None return exits 1.
-        content_flow.kickoff({"crewai_trigger_payload": trigger_payload})
-    except Exception as e:
-        raise Exception(f"An error occurred while running the flow with trigger: {e}")
-
-
-if __name__ == "__main__":
-    kickoff()
+def plot() -> None:
+    print(TriageFlow().plot("triage_flow.html", show=False))

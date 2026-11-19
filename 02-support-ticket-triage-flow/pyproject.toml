@@ -9,6 +9,8 @@ dependencies = [
     "fastapi>=0.115",
     "uvicorn>=0.30",
     "python-dotenv>=1.0",
+    "pyyaml>=6",
+    "ollama>=0.4",   # Ollama embedder for Memory / Knowledge
 ]
 
 [build-system]
@@ -23,7 +25,11 @@ packages = ["src/triage_flow"]
 [project.scripts]
 triage_flow_kickoff = "triage_flow.main:kickoff"
 triage_flow_plot = "triage_flow.main:plot"
-triage_flow_trigger = "triage_flow.main:run_with_trigger"
 
 [tool.crewai]
 type = "flow"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]
