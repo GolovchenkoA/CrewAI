@@ -75,12 +75,16 @@ Use for simple, single-turn tasks where you don't need tools or agent reasoning.
 from crewai import LLM
 from pydantic import BaseModel
 
+
 class EmailFields(BaseModel):
     sender: str
     subject: str
     urgency: str
 
-llm = LLM(model="openai/gpt-4o")   # non-OpenAI providers need their extra, e.g. uv add "crewai[anthropic]"
+
+llm = LLM(
+    model="openai/gpt-4o"
+)  # non-OpenAI providers need their extra, e.g. uv add "crewai[anthropic]"
 
 # Plain call - returns a string
 raw = llm.call(messages=[{"role": "user", "content": "Summarize this text..."}])
@@ -88,10 +92,12 @@ print(raw)  # str
 
 # With response_model - returns the Pydantic object directly
 result = llm.call(
-    messages=[{"role": "user", "content": f"Extract fields from this email: {email_text}"}],
+    messages=[
+        {"role": "user", "content": f"Extract fields from this email: {email_text}"}
+    ],
     response_model=EmailFields,
 )
-print(result.sender)   # str — access Pydantic fields directly
+print(result.sender)  # str — access Pydantic fields directly
 print(result.urgency)  # str
 ```
 
@@ -110,21 +116,23 @@ from crewai import Agent
 from crewai_tools import SerperDevTool
 from pydantic import BaseModel
 
+
 class ResearchFindings(BaseModel):
     main_points: list[str]
     key_technologies: list[str]
+
 
 researcher = Agent(
     role="AI Researcher",
     goal="Research the latest AI developments",
     backstory="Expert AI researcher with deep technical knowledge.",
-    llm="openai/gpt-4o",       # Optional: defaults to the MODEL / MODEL_NAME / OPENAI_MODEL_NAME env var, else "gpt-4.1-mini"
-    tools=[SerperDevTool()],   # needs SERPER_API_KEY
+    llm="openai/gpt-4o",  # Optional: defaults to the MODEL / MODEL_NAME / OPENAI_MODEL_NAME env var, else "gpt-4.1-mini"
+    tools=[SerperDevTool()],  # needs SERPER_API_KEY
 )
 
 # Unstructured output
 result = researcher.kickoff("What are the latest LLM developments?")
-print(result.raw)            # str
+print(result.raw)  # str
 print(result.usage_metrics)  # token usage dict
 
 # Structured output with response_format
@@ -209,15 +217,16 @@ research_task:
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 
+
 @CrewBase
 class ResearchCrew:
     """Research crew."""
 
-    agents_config = "config/agents.yaml"   # these two paths are also the defaults
+    agents_config = "config/agents.yaml"  # these two paths are also the defaults
     tasks_config = "config/tasks.yaml"
 
     @agent
-    def researcher(self) -> Agent:          # method name == YAML key
+    def researcher(self) -> Agent:  # method name == YAML key
         return Agent(config=self.agents_config["researcher"])
 
     @task
@@ -226,7 +235,12 @@ class ResearchCrew:
 
     @crew
     def crew(self) -> Crew:
-        return Crew(agents=self.agents, tasks=self.tasks, process=Process.sequential, verbose=True)
+        return Crew(
+            agents=self.agents,
+            tasks=self.tasks,
+            process=Process.sequential,
+            verbose=True,
+        )
 ```
 
 **Key rules:**
@@ -249,26 +263,27 @@ from crewai.flow import Flow, listen, start
 from pydantic import BaseModel
 from my_project.crews.research_crew.research_crew import ResearchCrew
 
+
 class ResearchState(BaseModel):
     topic: str = ""
     report: str = ""
 
-class ResearchFlow(Flow[ResearchState]):
 
+class ResearchFlow(Flow[ResearchState]):
     @start()
     def begin(self):
         print(f"Starting research on: {self.state.topic}")
 
     @listen(begin)
     def run_research(self):
-        result = ResearchCrew().crew().kickoff(
-            inputs={"topic": self.state.topic}
-        )
+        result = ResearchCrew().crew().kickoff(inputs={"topic": self.state.topic})
         self.state.report = result.raw
+
 
 def kickoff():
     flow = ResearchFlow()
-    flow.kickoff(inputs={"topic": "AI Agents"})   # do not return the result
+    flow.kickoff(inputs={"topic": "AI Agents"})  # do not return the result
+
 
 if __name__ == "__main__":
     kickoff()
@@ -302,14 +317,19 @@ A Flow can combine all crewAI abstractions in a single workflow:
 from crewai import LLM, Agent
 from crewai.flow import Flow, listen, router, start
 
-class ProductFlow(Flow[ProductState]):
 
+class ProductFlow(Flow[ProductState]):
     @start()
     def classify_request(self):
         # LLM.call() for simple classification
         llm = LLM(model="openai/gpt-4o")
         self.state.category = llm.call(
-            messages=[{"role": "user", "content": f"Classify as 'simple' or 'complex': {self.state.request}"}],
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"Classify as 'simple' or 'complex': {self.state.request}",
+                }
+            ],
             response_model=Category,
         ).category
 
@@ -328,9 +348,7 @@ class ProductFlow(Flow[ProductState]):
     @listen("deep_research")
     def handle_complex(self):
         # Crew.kickoff() for multi-agent collaboration
-        result = ResearchCrew().crew().kickoff(
-            inputs={"topic": self.state.request}
-        )
+        result = ResearchCrew().crew().kickoff(inputs={"topic": self.state.request})
         self.state.answer = result.raw
 ```
 
@@ -370,11 +388,13 @@ The `{variable}` pattern is how you make crews reusable.
 
 ```python
 # Variables flow through: kickoff → YAML templates → agent/task prompts
-crew.kickoff(inputs={
-    "topic": "AI Agents",
-    "current_year": "2025",
-    "target_audience": "developers",
-})
+crew.kickoff(
+    inputs={
+        "topic": "AI Agents",
+        "current_year": "2025",
+        "target_audience": "developers",
+    }
+)
 ```
 
 In YAML, `{topic}` and `{current_year}` get replaced (in agent `role`/`goal`/`backstory` as well as task `description`/`expected_output`):

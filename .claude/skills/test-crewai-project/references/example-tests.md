@@ -21,24 +21,30 @@ def out(raw):
     return TaskOutput(description="d", agent="Writer", raw=raw)
 
 
-@pytest.mark.parametrize("raw,accepted", [
-    ('{"title": "t", "bullets": ["a"]}', True),
-    ('{"title": "t", "bullets": []}', True),
-    ('{"title": "t", "bullets": ["a", "b", "c", "d"]}', False),
-    ("not json", False),
-])
+@pytest.mark.parametrize(
+    "raw,accepted",
+    [
+        ('{"title": "t", "bullets": ["a"]}', True),
+        ('{"title": "t", "bullets": []}', True),
+        ('{"title": "t", "bullets": ["a", "b", "c", "d"]}', False),
+        ("not json", False),
+    ],
+)
 def test_truth_table(raw, accepted):
     assert max_three_bullets(out(raw))[0] is accepted
 
 
 def test_rejection_message_is_specific():
-    assert max_three_bullets(out('{"title": "t", "bullets": ["a", "b", "c", "d"]}')) == (
-        False, "Use at most 3 bullets, you used 4.")
+    assert max_three_bullets(
+        out('{"title": "t", "bullets": ["a", "b", "c", "d"]}')
+    ) == (False, "Use at most 3 bullets, you used 4.")
 
 
 def test_gives_up_after_max_retries():
     llm = StubLLM(default_response='{"title": "T", "bullets": ["a", "b", "c", "d"]}')
-    with pytest.raises(Exception, match="Task failed guardrail validation after 2 retries"):
+    with pytest.raises(
+        Exception, match="Task failed guardrail validation after 2 retries"
+    ):
         brief_crew(llm).kickoff()
     assert len(llm.calls) == 3  # first attempt + guardrail_max_retries=2
 ```
@@ -73,10 +79,12 @@ def test_content_flow_with_stubbed_crew(monkeypatch):
     flow = ContentFlow()
     flow.kickoff(inputs={"crewai_trigger_payload": {"topic": "bees"}})
 
-    assert flow.state.topic == "bees"                          # payload reached the @start method
+    assert flow.state.topic == "bees"  # payload reached the @start method
     assert flow.state.final_post == "final post"
-    assert Path("output/post.md").read_text() == "final post"  # written into the tmp cwd
-    assert len(stub.calls) == 3                                # planner, writer, editor
+    assert (
+        Path("output/post.md").read_text() == "final post"
+    )  # written into the tmp cwd
+    assert len(stub.calls) == 3  # planner, writer, editor
 ```
 
 If you own the flow code, add a seam instead. `Flow` is a pydantic model, so declare `llm: Any = None` on the flow class, pass it to the crew it builds, and construct `MyFlow(llm=stub)` in tests.
@@ -89,8 +97,12 @@ A debug listener for real runs. Put it in its own module and import it from `mai
 
 ```python
 # debug_listener.py
-from crewai.events import (BaseEventListener, LLMCallCompletedEvent, TaskFailedEvent,
-                           ToolUsageFinishedEvent)
+from crewai.events import (
+    BaseEventListener,
+    LLMCallCompletedEvent,
+    TaskFailedEvent,
+    ToolUsageFinishedEvent,
+)
 
 
 class DebugListener(BaseEventListener):
@@ -116,8 +128,12 @@ A recorder that tests what was emitted:
 ```python
 # tests/test_events.py
 from crewai import Agent, Crew, Task
-from crewai.events import (BaseEventListener, LLMCallCompletedEvent, TaskCompletedEvent,
-                           crewai_event_bus)
+from crewai.events import (
+    BaseEventListener,
+    LLMCallCompletedEvent,
+    TaskCompletedEvent,
+    crewai_event_bus,
+)
 from stub_llm import StubLLM
 
 
@@ -175,10 +191,12 @@ def test_crew_test_entry_point_runs(capsys):
         agent.llm = worker
     judge = StubLLM(default_response='{"quality": 8.5}')
 
-    crew.test(n_iterations=2, eval_llm=judge, inputs={"topic": "bees", "current_year": "2026"})
+    crew.test(
+        n_iterations=2, eval_llm=judge, inputs={"topic": "bees", "current_year": "2026"}
+    )
 
     assert len(worker.calls) == 4  # 2 tasks x 2 iterations
-    assert len(judge.calls) == 4   # one score per task per iteration
+    assert len(judge.calls) == 4  # one score per task per iteration
     assert "8.5" in capsys.readouterr().out
 ```
 

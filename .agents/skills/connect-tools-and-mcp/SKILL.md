@@ -42,8 +42,11 @@ Run `crewai version` first; if the major/minor differs from 1.15, re-verify vers
 ```python
 from crewai.tools import BaseTool, tool, ToolFailure, ToolExecutionFailedError
 from crewai.mcp import (
-    MCPServerStdio, MCPServerHTTP, MCPServerSSE,
-    create_static_tool_filter, create_dynamic_tool_filter,
+    MCPServerStdio,
+    MCPServerHTTP,
+    MCPServerSSE,
+    create_static_tool_filter,
+    create_dynamic_tool_filter,
 )
 from crewai.mcp.exceptions import MCPConnectionError
 ```
@@ -56,9 +59,11 @@ from crewai.mcp.exceptions import MCPConnectionError
 from pydantic import BaseModel, Field
 from crewai.tools import BaseTool, tool
 
+
 class PriceInput(BaseModel):
     sku: str = Field(..., description="Product SKU, e.g. 'A-100'")
     currency: str = Field("EUR", description="ISO currency code")
+
 
 class PriceTool(BaseTool):
     name: str = "price_lookup"
@@ -68,12 +73,14 @@ class PriceTool(BaseTool):
     def _run(self, sku: str, currency: str = "EUR") -> str:
         return f"{sku} costs 9.99 {currency}"
 
+
 @tool("Unit Converter")
 def convert(km: float) -> str:
     """Convert kilometres to miles."""
     return f"{km * 0.621371:.1f} mi"
 
-print(PriceTool().run(sku="A-100"))   # args are validated against PriceInput first
+
+print(PriceTool().run(sku="A-100"))  # args are validated against PriceInput first
 print(convert.run(km=10))
 ```
 
@@ -140,21 +147,33 @@ Many tools need a third-party package. When it is missing, constructing the tool
 
 ```python
 from crewai import Agent
-from crewai.mcp import MCPServerHTTP, MCPServerSSE, MCPServerStdio, create_static_tool_filter
+from crewai.mcp import (
+    MCPServerHTTP,
+    MCPServerSSE,
+    MCPServerStdio,
+    create_static_tool_filter,
+)
 
 agent = Agent(
     role="Inventory analyst",
     goal="Answer stock questions",
     backstory="Careful with numbers.",
     mcps=[
-        MCPServerHTTP(url="https://mcp.example.com/mcp",
-                      headers={"Authorization": "Bearer <your-key>"}),
+        MCPServerHTTP(
+            url="https://mcp.example.com/mcp",
+            headers={"Authorization": "Bearer <your-key>"},
+        ),
         MCPServerSSE(url="https://legacy.example.com/sse"),
-        MCPServerStdio(command="uvx", args=["mcp-server-time"],
-                       tool_filter=create_static_tool_filter(allowed_tool_names=["get_current_time"])),
-        "https://docs.example.com/mcp#search_docs",   # https string, one tool (sync kickoff only - section 8)
-        "acme#lookup_stock",                           # AMP-connected integration, one tool
-        "acme#list_warehouses",                        # second tool = second ref
+        MCPServerStdio(
+            command="uvx",
+            args=["mcp-server-time"],
+            tool_filter=create_static_tool_filter(
+                allowed_tool_names=["get_current_time"]
+            ),
+        ),
+        "https://docs.example.com/mcp#search_docs",  # https string, one tool (sync kickoff only - section 8)
+        "acme#lookup_stock",  # AMP-connected integration, one tool
+        "acme#list_warehouses",  # second tool = second ref
     ],
 )
 ```
@@ -223,7 +242,7 @@ from crewai_tools import MCPServerAdapter
 
 params = StdioServerParameters(command="python", args=["mcp_server.py"])
 with MCPServerAdapter(params, "lookup_stock", connect_timeout=60) as tools:
-    print([t.name for t in tools])   # ['lookup_stock'] - bare names, filtered by name
+    print([t.name for t in tools])  # ['lookup_stock'] - bare names, filtered by name
     # build agents with tools=tools and kick off INSIDE the with-block
 ```
 

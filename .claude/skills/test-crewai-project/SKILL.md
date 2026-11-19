@@ -143,23 +143,42 @@ def word_counter(text: str) -> int:
 
 
 def test_tool_call_then_structured_answer():
-    llm = StubLLM(responses=[
-        tool_call("Word Counter", {"text": "bees make honey"}),  # researcher: use the tool
-        "Final Answer: 3 words",                                 # researcher: answer
-        {"title": "Bees", "bullets": ["honey"]},                 # writer: JSON for Brief
-    ])
-    researcher = Agent(role="Researcher", goal="Count words", backstory="Careful.",
-                       tools=[word_counter], llm=llm)
+    llm = StubLLM(
+        responses=[
+            tool_call(
+                "Word Counter", {"text": "bees make honey"}
+            ),  # researcher: use the tool
+            "Final Answer: 3 words",  # researcher: answer
+            {"title": "Bees", "bullets": ["honey"]},  # writer: JSON for Brief
+        ]
+    )
+    researcher = Agent(
+        role="Researcher",
+        goal="Count words",
+        backstory="Careful.",
+        tools=[word_counter],
+        llm=llm,
+    )
     writer = Agent(role="Writer", goal="Write briefs", backstory="Concise.", llm=llm)
-    count = Task(description="Count the words", expected_output="A count", agent=researcher)
-    brief = Task(description="Write a brief", expected_output="Title and bullets",
-                 agent=writer, output_pydantic=Brief)
+    count = Task(
+        description="Count the words", expected_output="A count", agent=researcher
+    )
+    brief = Task(
+        description="Write a brief",
+        expected_output="Title and bullets",
+        agent=writer,
+        output_pydantic=Brief,
+    )
 
     out = Crew(agents=[researcher, writer], tasks=[count, brief]).kickoff()
 
-    assert tool_inputs == ["bees make honey"]               # the real tool ran
-    assert "Observation: 3" in prompt_text(llm.calls[1])    # its result went back to the LLM
-    assert llm.calls[0]["response_model"] is None           # agents WITH tools get no response_model
+    assert tool_inputs == ["bees make honey"]  # the real tool ran
+    assert "Observation: 3" in prompt_text(
+        llm.calls[1]
+    )  # its result went back to the LLM
+    assert (
+        llm.calls[0]["response_model"] is None
+    )  # agents WITH tools get no response_model
     assert llm.calls[2]["response_model"] is Brief
     assert out.pydantic == Brief(title="Bees", bullets=["honey"])
 ```
@@ -200,14 +219,19 @@ def test_research_crew_output_and_prompts():
     out = crew_with(llm).kickoff(inputs={"topic": "bees", "current_year": "2026"})
 
     assert out.raw == "# Bees report"
-    assert [t.raw for t in out.tasks_output] == ["- bees pollinate crops", "# Bees report"]
+    assert [t.raw for t in out.tasks_output] == [
+        "- bees pollinate crops",
+        "# Bees report",
+    ]
     assert len(llm.calls) == 2
 
     first = prompt_text(llm.calls[0])
-    assert "bees Senior Data Researcher" in first                   # {topic} filled in agents.yaml
-    assert "the current year is 2026" in first                      # {current_year} in tasks.yaml
-    assert "- bees pollinate crops" in prompt_text(llm.calls[1])    # task 1 output is task 2 context
-    assert Path("report.md").read_text() == "# Bees report"         # output_file, in tmp cwd
+    assert "bees Senior Data Researcher" in first  # {topic} filled in agents.yaml
+    assert "the current year is 2026" in first  # {current_year} in tasks.yaml
+    assert "- bees pollinate crops" in prompt_text(
+        llm.calls[1]
+    )  # task 1 output is task 2 context
+    assert Path("report.md").read_text() == "# Bees report"  # output_file, in tmp cwd
 ```
 
 `llm.calls[i]` holds `messages` (a snapshot of the system+user messages crewai sent), `response_model`, `tools` and `response`. `prompt_text(call)` joins the message contents. Useful things to assert on:
@@ -252,15 +276,24 @@ def max_three_bullets(output: TaskOutput):
 
 def brief_crew(llm):
     writer = Agent(role="Writer", goal="Write briefs", backstory="Concise.", llm=llm)
-    task = Task(description="Write a brief", expected_output="Title and up to 3 bullets",
-                agent=writer, output_pydantic=Brief,
-                guardrail=max_three_bullets, guardrail_max_retries=2)
+    task = Task(
+        description="Write a brief",
+        expected_output="Title and up to 3 bullets",
+        agent=writer,
+        output_pydantic=Brief,
+        guardrail=max_three_bullets,
+        guardrail_max_retries=2,
+    )
     return Crew(agents=[writer], tasks=[task])
 
 
 def test_retry_feeds_the_error_back():
-    llm = StubLLM(responses=[{"title": "T", "bullets": ["a", "b", "c", "d"]},
-                             {"title": "T", "bullets": ["a"]}])
+    llm = StubLLM(
+        responses=[
+            {"title": "T", "bullets": ["a", "b", "c", "d"]},
+            {"title": "T", "bullets": ["a"]},
+        ]
+    )
     out = brief_crew(llm).kickoff()
     assert out.pydantic == Brief(title="T", bullets=["a"])
     assert "Use at most 3 bullets, you used 4." in prompt_text(llm.calls[1])
@@ -296,7 +329,9 @@ class TopicFlow(Flow[State]):
 
     @router(normalize)
     def choose(self):
-        return "has_topic" if self.state.topic else "no_topic"  # labels differ from method names
+        return (
+            "has_topic" if self.state.topic else "no_topic"
+        )  # labels differ from method names
 
     @listen("has_topic")
     def research(self):

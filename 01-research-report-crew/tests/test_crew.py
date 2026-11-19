@@ -80,12 +80,23 @@ def test_full_sequential_run():
 
     report = Path("output/bees/report.md").read_text(encoding="utf-8")
     assert "## Key Findings" in report
-    assert json.loads(Path("output/bees/analysis.json").read_text(encoding="utf-8"))["topic"] == "bees"
+    assert (
+        json.loads(Path("output/bees/analysis.json").read_text(encoding="utf-8"))[
+            "topic"
+        ]
+        == "bees"
+    )
 
     prompts = [prompt_text(c) for c in llm.calls]
-    assert any("https://example.com" in p and "Web Scout" in p for p in prompts)  # URLs reach the scout
-    assert any("Bees pollinate crops" in p and "Technical Writer" in p for p in prompts)  # context flows on
-    assert any("Observation: " in p and "words" in p for p in prompts)  # editor used Word Count
+    assert any(
+        "https://example.com" in p and "Web Scout" in p for p in prompts
+    )  # URLs reach the scout
+    assert any(
+        "Bees pollinate crops" in p and "Technical Writer" in p for p in prompts
+    )  # context flows on
+    assert any(
+        "Observation: " in p and "words" in p for p in prompts
+    )  # editor used Word Count
 
 
 def test_batch_runs_use_their_own_inputs():

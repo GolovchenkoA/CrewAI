@@ -65,8 +65,11 @@ from crewai import BaseLLM
 from crewai.llms.base_llm import llm_call_context
 
 
-def tool_call(tool_name: str, args: dict[str, Any] | None = None,
-              thought: str = "I should use a tool.") -> str:
+def tool_call(
+    tool_name: str,
+    args: dict[str, Any] | None = None,
+    thought: str = "I should use a tool.",
+) -> str:
     """Return a ReAct-format response that makes the agent run ``tool_name``."""
     return (
         f"Thought: {thought}\n"
@@ -108,7 +111,9 @@ def _skeleton(model: type[BaseModel]) -> dict[str, Any]:
     for name, field in model.model_fields.items():
         if not field.is_required():
             default = field.get_default(call_default_factory=True)
-            data[name] = default.model_dump() if isinstance(default, BaseModel) else default
+            data[name] = (
+                default.model_dump() if isinstance(default, BaseModel) else default
+            )
         else:
             data[name] = _placeholder_for(field.annotation)
     return data
@@ -164,7 +169,10 @@ class StubLLM(BaseLLM):
             return self._to_text(item)
         if self.responder is not None:
             return self._to_text(self.responder(messages, response_model))
-        if response_model is not None and "default_response" not in self.model_fields_set:
+        if (
+            response_model is not None
+            and "default_response" not in self.model_fields_set
+        ):
             return json.dumps(_skeleton(response_model))
         return self.default_response
 
@@ -183,8 +191,13 @@ class StubLLM(BaseLLM):
         # call_id, the same way the native providers do.
         with llm_call_context():
             return self._call(
-                messages, tools, callbacks, available_functions,
-                from_task, from_agent, response_model,
+                messages,
+                tools,
+                callbacks,
+                available_functions,
+                from_task,
+                from_agent,
+                response_model,
             )
 
     def _call(
@@ -221,7 +234,8 @@ class StubLLM(BaseLLM):
         usage = {
             "prompt_tokens": self.prompt_tokens_per_call,
             "completion_tokens": self.completion_tokens_per_call,
-            "total_tokens": self.prompt_tokens_per_call + self.completion_tokens_per_call,
+            "total_tokens": self.prompt_tokens_per_call
+            + self.completion_tokens_per_call,
         }
         self._track_token_usage_internal(usage)
         if self.emit_events:

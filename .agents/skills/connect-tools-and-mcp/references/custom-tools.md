@@ -10,10 +10,13 @@ Runnable patterns for custom crewAI tools on crewai 1.15.22-1.15.23: `BaseTool`,
 from pydantic import BaseModel, Field
 from crewai.tools import BaseTool
 
+
 class SearchInput(BaseModel):
     """Arguments the LLM must supply."""
+
     query: str = Field(..., description="Keywords to search the catalog for")
     limit: int = Field(5, description="Maximum number of results")
+
 
 class CatalogSearchTool(BaseTool):
     name: str = "search_catalog"
@@ -29,12 +32,15 @@ class CatalogSearchTool(BaseTool):
     def _run(self, query: str, limit: int = 5) -> str:
         return f"{limit} results for {query!r} in {self.catalog_name}"
 
+
 tool = CatalogSearchTool(catalog_name="spring-2026")
-print(tool.run(query="mug", limit="3"))     # "3" is coerced to int by the schema
+print(tool.run(query="mug", limit="3"))  # "3" is coerced to int by the schema
 try:
-    tool.run(limit=2)                       # missing required 'query'
+    tool.run(limit=2)  # missing required 'query'
 except ValueError as e:
-    print(str(e).splitlines()[0])           # Tool 'search_catalog' arguments validation failed: ...
+    print(
+        str(e).splitlines()[0]
+    )  # Tool 'search_catalog' arguments validation failed: ...
 ```
 
 - `_run` parameter names must match the schema field names.
@@ -48,28 +54,33 @@ except ValueError as e:
 ```python
 from crewai.tools import tool
 
+
 @tool
 def word_count(text: str) -> int:
     """Count the words in a text."""
     return len(text.split())
+
 
 @tool("Unit Converter")
 def convert(km: float) -> str:
     """Convert kilometres to miles."""
     return f"{km * 0.621371:.1f} mi"
 
+
 @tool("Final Report", result_as_answer=True)
 def final_report(topic: str) -> str:
     """Produce the final report for a topic."""
     return f"REPORT on {topic}"
+
 
 @tool("Send Invoice", max_usage_count=1)
 def send_invoice(customer_id: str) -> str:
     """Send one invoice to a customer."""
     return f"invoice sent to {customer_id}"
 
-print(word_count.name, convert.name)    # word_count Unit Converter
-print(convert.run(km=10))               # 6.2 mi
+
+print(word_count.name, convert.name)  # word_count Unit Converter
+print(convert.run(km=10))  # 6.2 mi
 ```
 
 - `@tool(*args, result_schema=None, result_as_answer=False, max_usage_count=None)` is the full signature. The function name, or the string you pass, becomes the name.
@@ -86,13 +97,15 @@ Agents execute every tool through `_run`, in both `crew.kickoff()` and `await cr
 import asyncio
 from crewai.tools import BaseTool, tool
 
+
 class FetchPageTool(BaseTool):
     name: str = "fetch_page"
     description: str = "Fetch a web page and return its HTML."
 
     async def _run(self, url: str) -> str:
-        await asyncio.sleep(0)            # stand-in for an async HTTP call
+        await asyncio.sleep(0)  # stand-in for an async HTTP call
         return f"<html>{url}</html>"
+
 
 @tool("Ping")
 async def ping(host: str) -> str:
@@ -100,7 +113,8 @@ async def ping(host: str) -> str:
     await asyncio.sleep(0)
     return f"pong from {host}"
 
-print(FetchPageTool().run(url="a.example"))   # works from sync code too
+
+print(FetchPageTool().run(url="a.example"))  # works from sync code too
 print(ping.run(host="db"))
 ```
 
@@ -116,21 +130,32 @@ A tool that raises does **not** fail the crew. crewai catches the exception, fee
 from crewai import Agent, Crew, Task
 from crewai.tools import BaseTool, ToolFailure, ToolExecutionFailedError
 
+
 class InventoryApiTool(BaseTool):
     name: str = "inventory_api"
     description: str = "Query the inventory API for a SKU."
 
     def _run(self, sku: str) -> ToolFailure | str:
-        status = 429                                  # pretend the API rate-limited this call
+        status = 429  # pretend the API rate-limited this call
         if status != 200:
-            return ToolFailure(message=f"inventory API returned {status}",
-                               code="rate_limited", retryable=True)
+            return ToolFailure(
+                message=f"inventory API returned {status}",
+                code="rate_limited",
+                retryable=True,
+            )
         return "42 units"
 
-agent = Agent(role="Analyst", goal="Check stock", backstory="Careful.",
-              tools=[InventoryApiTool()],
-              tool_failure_policy="raise")            # "ignore" | "warn" (default) | "raise"
-task = Task(description="Check stock for A-100", expected_output="Stock level", agent=agent)
+
+agent = Agent(
+    role="Analyst",
+    goal="Check stock",
+    backstory="Careful.",
+    tools=[InventoryApiTool()],
+    tool_failure_policy="raise",
+)  # "ignore" | "warn" (default) | "raise"
+task = Task(
+    description="Check stock for A-100", expected_output="Stock level", agent=agent
+)
 crew = Crew(agents=[agent], tasks=[task])
 # crew.kickoff() now raises ToolExecutionFailedError instead of finishing "successfully".
 ```
@@ -151,18 +176,21 @@ crew = Crew(agents=[agent], tasks=[task])
 from crewai import Agent, Crew, Task
 from crewai.tools import BaseTool
 
+
 class QuoteTool(BaseTool):
     name: str = "fx_quote"
     description: str = "Live FX quote for a currency pair."
+
     def _run(self, pair: str) -> str:
         return f"{pair} 1.0842"
 
-live = QuoteTool(cache_function=lambda args, result: False)   # never cache live data
+
+live = QuoteTool(cache_function=lambda args, result: False)  # never cache live data
 agent = Agent(role="Analyst", goal="Quote FX", backstory="Precise.", tools=[live])
 crew = Crew(
     agents=[agent],
     tasks=[Task(description="Quote EURUSD", expected_output="A rate", agent=agent)],
-    cache=True,      # opt-in in 1.15.3+; default False
+    cache=True,  # opt-in in 1.15.3+; default False
 )
 ```
 
@@ -184,16 +212,21 @@ The same call twice *in a row* executes once in every configuration. That is the
 ```python
 from crewai.tools import BaseTool
 
+
 class SendEmailTool(BaseTool):
     name: str = "send_email"
     description: str = "Send the drafted email. Only once per task."
     max_usage_count: int | None = 1
+
     def _run(self, to: str, body: str) -> str:
         return f"sent to {to}"
 
+
 t = SendEmailTool()
 print(t.run(to="ops@example.com", body="hi"))
-print(t.run(to="ops@example.com", body="again"))   # ToolFailure: ... reached its usage limit of 1 times ...
+print(
+    t.run(to="ops@example.com", body="again")
+)  # ToolFailure: ... reached its usage limit of 1 times ...
 t.reset_usage_count()
 ```
 

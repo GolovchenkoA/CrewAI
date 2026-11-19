@@ -24,8 +24,8 @@ Passing both `from_checkpoint` and `restore_from_state_id` raises `ValueError: C
 import os
 from crewai.flow.persistence import SQLiteFlowPersistence
 
-os.environ["CREWAI_STORAGE_DIR"] = os.path.abspath("flow-state")   # absolute path
-print(SQLiteFlowPersistence().db_path)   # <cwd>/flow-state/flow_states.db
+os.environ["CREWAI_STORAGE_DIR"] = os.path.abspath("flow-state")  # absolute path
+print(SQLiteFlowPersistence().db_path)  # <cwd>/flow-state/flow_states.db
 ```
 
 - The default directory is `appdirs.user_data_dir(name, "CrewAI")`, where `name` is `CREWAI_STORAGE_DIR` or the current directory's name. A relative value is an app name, not a path: on macOS it resolves under `~/Library/Application Support/`, on Linux under `~/.local/share/`. An absolute value is used as the directory itself.
@@ -55,10 +55,10 @@ class P(Flow[C]):
 
 
 p = P()
-p.kickoff()                                                 # (1, 'a')
+p.kickoff()  # (1, 'a')
 q = P()
-print(q.kickoff(inputs={"label": "b"}, restore_from_state_id=p.state.id))   # (2, 'b')
-print(q.state.id != p.state.id)                             # True
+print(q.kickoff(inputs={"label": "b"}, restore_from_state_id=p.state.id))  # (2, 'b')
+print(q.state.id != p.state.id)  # True
 ```
 
 - `restore_from_state_id` is a **fork**: it loads the latest snapshot for that id, assigns a fresh `state.id`, then applies `inputs` on top.
@@ -83,7 +83,7 @@ class Pipeline(Flow[S]):
     def fetch(self):
         self.state.stage = "fetched"
 
-    @persist()                 # only this method's completion is saved
+    @persist()  # only this method's completion is saved
     @listen(fetch)
     def transform(self):
         self.state.stage = "transformed"
@@ -93,7 +93,7 @@ class Pipeline(Flow[S]):
         self.state.stage = "notified"
 
 
-Pipeline().kickoff()   # one row saved, with stage == "transformed"
+Pipeline().kickoff()  # one row saved, with stage == "transformed"
 ```
 
 Class-level `@persist()` saves after every method, so a restore picks up the state as of the last method that finished.
@@ -119,11 +119,14 @@ class DictPersistence(FlowPersistence):
     _rows: dict[str, str] = PrivateAttr(default_factory=dict)
 
     def init_db(self) -> None:
-        pass   # connect / create tables here
+        pass  # connect / create tables here
 
-    def save_state(self, flow_uuid: str, method_name: str,
-                   state_data: dict[str, Any] | BaseModel) -> None:
-        data = state_data.model_dump() if isinstance(state_data, BaseModel) else state_data
+    def save_state(
+        self, flow_uuid: str, method_name: str, state_data: dict[str, Any] | BaseModel
+    ) -> None:
+        data = (
+            state_data.model_dump() if isinstance(state_data, BaseModel) else state_data
+        )
         self._rows[flow_uuid] = json.dumps(data)
 
     def load_state(self, flow_uuid: str) -> dict[str, Any] | None:
@@ -148,7 +151,7 @@ class Counter(Flow[C]):
 
 a = Counter()
 a.kickoff()
-print(Counter().kickoff(restore_from_state_id=a.state.id))   # 2
+print(Counter().kickoff(restore_from_state_id=a.state.id))  # 2
 ```
 
 `crewai.flow.persistence.factory.set_flow_persistence_factory(fn)` sets the process-wide default used by every bare `@persist()`.
@@ -183,7 +186,9 @@ class Etl(Flow[S]):
         return f"loaded {rows}"
 
 
-cfg = CheckpointConfig(location="./.checkpoints", on_events=["method_execution_finished"])
+cfg = CheckpointConfig(
+    location="./.checkpoints", on_events=["method_execution_finished"]
+)
 try:
     Etl(checkpoint=cfg).kickoff()
 except RuntimeError:
@@ -191,13 +196,15 @@ except RuntimeError:
 
 # newest by mtime: file names carry a one-second timestamp plus a random id, so sorting names
 # can pick an older file when several methods finish in the same second
-latest = max(glob.glob("./.checkpoints/**/*.json", recursive=True), key=os.path.getmtime)
+latest = max(
+    glob.glob("./.checkpoints/**/*.json", recursive=True), key=os.path.getmtime
+)
 
 # kickoff(from_checkpoint=...) replays with the saved state, so it fails again here.
 # To fix state first, restore, edit, then kick off:
 flow = Etl.from_checkpoint(CheckpointConfig(restore_from=latest))
 flow.state.fail = False
-print(flow.kickoff())   # "loaded 3" - extract() is skipped
+print(flow.kickoff())  # "loaded 3" - extract() is skipped
 ```
 
 - Flows need `on_events=["method_execution_finished"]`; the default `["task_completed"]` wrote nothing for a flow, even when a method ran a crew.
@@ -212,8 +219,14 @@ print(flow.kickoff())   # "loaded 3" - extract() is skipped
 A provider that raises `HumanFeedbackPending` pauses the flow; `kickoff()` returns the pending object and the state is saved. Resume later, in any process, with the same persistence.
 
 ```python
-from crewai.flow import (Flow, HumanFeedbackPending, PendingFeedbackContext,
-                         human_feedback, listen, start)
+from crewai.flow import (
+    Flow,
+    HumanFeedbackPending,
+    PendingFeedbackContext,
+    human_feedback,
+    listen,
+    start,
+)
 from crewai.flow.persistence import SQLiteFlowPersistence
 
 
@@ -225,9 +238,13 @@ class NotifyReviewer:
 
 class Review(Flow):
     @start()
-    @human_feedback(message="Approve?", emit=["rejected", "approved"],
-                    llm="openai/gpt-4o-mini", default_outcome="rejected",
-                    provider=NotifyReviewer())
+    @human_feedback(
+        message="Approve?",
+        emit=["rejected", "approved"],
+        llm="openai/gpt-4o-mini",
+        default_outcome="rejected",
+        provider=NotifyReviewer(),
+    )
     def write(self):
         return "draft v1"
 
@@ -246,7 +263,9 @@ assert isinstance(pending, HumanFeedbackPending)
 flow_id = pending.context.flow_id
 
 # later, e.g. in a webhook handler
-print(Review.from_pending(flow_id, SQLiteFlowPersistence("./hitl.db")).resume(""))   # "dropped"
+print(
+    Review.from_pending(flow_id, SQLiteFlowPersistence("./hitl.db")).resume("")
+)  # "dropped"
 ```
 
 - Give `llm=` a model string here. The paused context stores the LLM as a model string and rebuilds it on resume, so a custom `BaseLLM` instance cannot be rebuilt (`ImportError: Unable to initialize LLM with model ...`).

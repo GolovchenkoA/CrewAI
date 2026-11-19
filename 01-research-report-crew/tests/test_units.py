@@ -26,7 +26,9 @@ def test_guardrail_strips_code_fence():
     assert ok and not value.startswith("```")
 
 
-@pytest.mark.parametrize("missing", ["Executive Summary", "Key Findings", "Conclusion", "Sources"])
+@pytest.mark.parametrize(
+    "missing", ["Executive Summary", "Key Findings", "Conclusion", "Sources"]
+)
 def test_guardrail_rejects_missing_section(missing):
     ok, feedback = check(GOOD.replace(missing, "Other"))
     assert not ok and missing in feedback

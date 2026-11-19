@@ -5,7 +5,9 @@ from pydantic import BaseModel, Field
 
 class Claim(BaseModel):
     statement: str = Field(description="One factual claim about the topic.")
-    evidence: str = Field(description="The fact or quote from the research that supports it.")
+    evidence: str = Field(
+        description="The fact or quote from the research that supports it."
+    )
     source: str = Field(description="URL or note file name the evidence came from.")
     confidence: Literal["high", "medium", "low"]
 

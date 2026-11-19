@@ -44,9 +44,10 @@ from crewai.flow import ConversationConfig, ConversationState, listen
 # crewai.experimental.conversational is a deprecated alias of the same module
 
 
-@ConversationConfig(defer_trace_finalization=True)   # True is the default; the decorator also sets conversational = True
+@ConversationConfig(
+    defer_trace_finalization=True
+)  # True is the default; the decorator also sets conversational = True
 class SupportFlow(Flow[ConversationState]):
-
     def route_turn(self, context):
         message = (self.state.current_user_message or "").lower()
         if "order" in message:
@@ -67,8 +68,12 @@ class SupportFlow(Flow[ConversationState]):
 flow = SupportFlow()
 
 try:
-    flow.handle_turn("Where is my order?", session_id="support-123")   # -> "Your order is on the way."
-    flow.handle_turn("What about returns?", session_id="support-123")  # -> converse route
+    flow.handle_turn(
+        "Where is my order?", session_id="support-123"
+    )  # -> "Your order is on the way."
+    flow.handle_turn(
+        "What about returns?", session_id="support-123"
+    )  # -> converse route
 finally:
     flow.finalize_session_traces()
 ```
@@ -84,9 +89,8 @@ from crewai import Flow
 from crewai.flow import ConversationConfig, ConversationState, listen
 
 
-@ConversationConfig(llm="openai/gpt-4o-mini")   # used by the built-in `converse` route
+@ConversationConfig(llm="openai/gpt-4o-mini")  # used by the built-in `converse` route
 class SupportFlow(Flow[ConversationState]):
-
     def route_turn(self, context):
         message = (self.state.current_user_message or "").lower()
         if "docs" in message or "crewai" in message:
@@ -105,9 +109,15 @@ flow = SupportFlow()
 session_id = str(uuid4())
 
 try:
-    flow.handle_turn("Hi! My name is Ada. What can you do?", session_id=session_id)  # -> converse (LLM reply)
-    flow.handle_turn("Check the CrewAI docs for flows.", session_id=session_id)      # -> CREWAI_DOCS
-    flow.handle_turn("What is my name?", session_id=session_id)                      # -> converse: "Your name is Ada."
+    flow.handle_turn(
+        "Hi! My name is Ada. What can you do?", session_id=session_id
+    )  # -> converse (LLM reply)
+    flow.handle_turn(
+        "Check the CrewAI docs for flows.", session_id=session_id
+    )  # -> CREWAI_DOCS
+    flow.handle_turn(
+        "What is my name?", session_id=session_id
+    )  # -> converse: "Your name is Ada."
 finally:
     flow.finalize_session_traces()
 ```

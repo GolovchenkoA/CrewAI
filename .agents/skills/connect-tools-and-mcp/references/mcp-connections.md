@@ -12,20 +12,28 @@ from crewai import Agent
 from crewai.mcp import MCPServerStdio, MCPServerHTTP, MCPServerSSE
 
 local = MCPServerStdio(
-    command="uvx",                         # keep command/args short: they become part of tool names
+    command="uvx",  # keep command/args short: they become part of tool names
     args=["mcp-server-time"],
-    env={"TZ": "UTC"},                     # the server gets ONLY these plus HOME, LOGNAME, PATH, SHELL, TERM, USER
+    env={
+        "TZ": "UTC"
+    },  # the server gets ONLY these plus HOME, LOGNAME, PATH, SHELL, TERM, USER
     cache_tools_list=True,
 )
 remote = MCPServerHTTP(
     url="https://mcp.example.com/mcp",
-    headers={"Authorization": f"Bearer {os.environ.get('ACME_MCP_TOKEN', '<your-key>')}"},
-    streamable=True,                       # default; streamable HTTP transport
+    headers={
+        "Authorization": f"Bearer {os.environ.get('ACME_MCP_TOKEN', '<your-key>')}"
+    },
+    streamable=True,  # default; streamable HTTP transport
 )
 legacy = MCPServerSSE(url="https://legacy.example.com/sse")
 
-agent = Agent(role="Ops assistant", goal="Answer ops questions", backstory="Precise.",
-              mcps=[local, remote, legacy])
+agent = Agent(
+    role="Ops assistant",
+    goal="Answer ops questions",
+    backstory="Precise.",
+    mcps=[local, remote, legacy],
+)
 ```
 
 | Config | Fields (complete list) |
@@ -50,12 +58,14 @@ Connections are made when a task executes, not when the Agent is built. Every to
 from crewai import Agent
 
 agent = Agent(
-    role="Researcher", goal="Find facts", backstory="Thorough.",
+    role="Researcher",
+    goal="Find facts",
+    backstory="Thorough.",
     mcps=[
-        "https://docs.example.com/mcp",               # every tool on the server
+        "https://docs.example.com/mcp",  # every tool on the server
         "https://search.example.com/mcp#web_search",  # only web_search
-        "acme",                                       # AMP-connected integration, all tools
-        "acme#lookup_stock",                          # one tool per ref
+        "acme",  # AMP-connected integration, all tools
+        "acme#lookup_stock",  # one tool per ref
         "acme#list_warehouses",
     ],
 )
@@ -75,23 +85,35 @@ agent = Agent(
 ## 3. Filtering tools
 
 ```python
-from crewai.mcp import MCPServerStdio, create_static_tool_filter, create_dynamic_tool_filter
+from crewai.mcp import (
+    MCPServerStdio,
+    create_static_tool_filter,
+    create_dynamic_tool_filter,
+)
 
 only_reads = MCPServerStdio(
     command="npx",
     args=["-y", "@modelcontextprotocol/server-filesystem", "./data"],
     tool_filter=create_static_tool_filter(
-        allowed_tool_names=["read_text_file", "list_directory"],   # read_file is deprecated in this server
-        blocked_tool_names=["write_file"],          # blocked wins over allowed
+        allowed_tool_names=[
+            "read_text_file",
+            "list_directory",
+        ],  # read_file is deprecated in this server
+        blocked_tool_names=["write_file"],  # blocked wins over allowed
     ),
 )
+
 
 def no_destructive(context, tool):
     """context: ToolFilterContext(agent, server_name, run_context); tool: dict with 'name', 'description', ..."""
     return not tool["name"].startswith(("write", "edit", "move"))
 
-guarded = MCPServerStdio(command="npx", args=["-y", "@modelcontextprotocol/server-filesystem", "./data"],
-                         tool_filter=create_dynamic_tool_filter(no_destructive))
+
+guarded = MCPServerStdio(
+    command="npx",
+    args=["-y", "@modelcontextprotocol/server-filesystem", "./data"],
+    tool_filter=create_dynamic_tool_filter(no_destructive),
+)
 ```
 
 Filters see the **sanitized** tool name. A server tool called `getForecast` must appear in the filter as `get_forecast`. `allowed_tool_names=["getForecast"]` keeps nothing (verified).
@@ -119,8 +141,12 @@ from crewai.mcp import MCPServerStdio
 
 agent = Agent(role="r", goal="g", backstory="b")
 server = MCPServerStdio(command="python", args=["mcp_server.py"])
-by_original = {t.original_tool_name: t for t in agent.get_mcp_tools([server])}  # connects now
-print(by_original["lookup_stock"].name)       # python_mcp_server.py_lookup_stock (the LLM sees python_mcp_server_py_lookup_stock)
+by_original = {
+    t.original_tool_name: t for t in agent.get_mcp_tools([server])
+}  # connects now
+print(
+    by_original["lookup_stock"].name
+)  # python_mcp_server.py_lookup_stock (the LLM sees python_mcp_server_py_lookup_stock)
 print(by_original["lookup_stock"].run(sku="A-100"))
 ```
 
@@ -154,13 +180,21 @@ from mcp import StdioServerParameters
 from crewai import Agent, Crew, Task
 from crewai_tools import MCPServerAdapter
 
-stdio = StdioServerParameters(command="python", args=["mcp_server.py"], env={"LOG_LEVEL": "warning"})
+stdio = StdioServerParameters(
+    command="python", args=["mcp_server.py"], env={"LOG_LEVEL": "warning"}
+)
 # Remote server: pass a dict. Without "transport" the adapter assumes SSE.
 remote = {"url": "https://mcp.example.com/mcp", "transport": "streamable-http"}
 
-with MCPServerAdapter(stdio, "lookup_stock", "list_warehouses", connect_timeout=60) as tools:
-    agent = Agent(role="Inventory analyst", goal="Check stock", backstory="Careful.", tools=tools)
-    task = Task(description="Report stock for A-100", expected_output="One line", agent=agent)
+with MCPServerAdapter(
+    stdio, "lookup_stock", "list_warehouses", connect_timeout=60
+) as tools:
+    agent = Agent(
+        role="Inventory analyst", goal="Check stock", backstory="Careful.", tools=tools
+    )
+    task = Task(
+        description="Report stock for A-100", expected_output="One line", agent=agent
+    )
     crew = Crew(agents=[agent], tasks=[task])
     # result = crew.kickoff()     # must run inside the with-block; the server stops on exit
 ```
@@ -176,23 +210,33 @@ from mcp import StdioServerParameters
 from crewai import Agent, Crew, Task
 from crewai.project import CrewBase, agent, crew, task
 
+
 @CrewBase
 class InventoryCrew:
     mcp_server_params = StdioServerParameters(command="python", args=["mcp_server.py"])
-    mcp_connect_timeout = 60                      # default 30
+    mcp_connect_timeout = 60  # default 30
 
     @agent
     def analyst(self) -> Agent:
-        return Agent(role="Inventory analyst", goal="Check stock", backstory="Careful.",
-                     tools=self.get_mcp_tools("lookup_stock"))   # no names = all tools
+        return Agent(
+            role="Inventory analyst",
+            goal="Check stock",
+            backstory="Careful.",
+            tools=self.get_mcp_tools("lookup_stock"),
+        )  # no names = all tools
 
     @task
     def check(self) -> Task:
-        return Task(description="Check stock for C-3", expected_output="One line", agent=self.analyst())
+        return Task(
+            description="Check stock for C-3",
+            expected_output="One line",
+            agent=self.analyst(),
+        )
 
     @crew
     def crew(self) -> Crew:
         return Crew(agents=self.agents, tasks=self.tasks)
+
 
 # Fresh instance per run: crewai stops the adapter after each kickoff.
 # InventoryCrew().crew().kickoff()

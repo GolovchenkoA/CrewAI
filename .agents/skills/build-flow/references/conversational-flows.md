@@ -22,26 +22,29 @@ Official guide: https://docs.crewai.com/en/guides/flows/conversational-flows
 from crewai.flow import ConversationConfig, ConversationState, Flow, listen
 
 
-@ConversationConfig(system_prompt="")        # the decorator also marks the flow conversational
+@ConversationConfig(
+    system_prompt=""
+)  # the decorator also marks the flow conversational
 class SupportFlow(Flow[ConversationState]):
-
     def route_turn(self, context):
         text = (self.state.current_user_message or "").lower()
         if "order" in text:
             return "ORDER"
-        return "end"                         # built-in route that ends the conversation
+        return "end"  # built-in route that ends the conversation
 
     @listen("ORDER")
     def handle_order(self) -> str:
-        """Order status questions."""        # first docstring line describes the route
-        return "Your order is on the way."   # a returned string becomes the assistant reply
+        """Order status questions."""  # first docstring line describes the route
+        return (
+            "Your order is on the way."  # a returned string becomes the assistant reply
+        )
 
 
 flow = SupportFlow()
 try:
     print(flow.handle_turn("Where is my order?", session_id="support-123"))
     # Your order is on the way.
-    print([m.role for m in flow.state.messages])      # ['user', 'assistant']
+    print([m.role for m in flow.state.messages])  # ['user', 'assistant']
     print(flow.handle_turn("bye", session_id="support-123"))
     # Conversation ended.
 finally:

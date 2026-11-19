@@ -20,9 +20,9 @@ Run `crewai version` first; if the major/minor differs from 1.15, re-verify vers
    ```python
    from crewai import Agent, Crew, Task
 
-   assert "response_model" in Task.model_fields      # real field
+   assert "response_model" in Task.model_fields  # real field
    assert "response_format" not in Task.model_fields  # silently dropped if passed
-   assert "memory_config" not in Crew.model_fields    # silently dropped if passed
+   assert "memory_config" not in Crew.model_fields  # silently dropped if passed
    print(sorted(Agent.model_fields)[:5])
    ```
 
@@ -45,8 +45,28 @@ Run `crewai version` first; if the major/minor differs from 1.15, re-verify vers
 The current top-level and project imports:
 
 ```python
-from crewai import Agent, BaseLLM, Crew, CrewOutput, Flow, LLM, Memory, Process, Task, TaskOutput
-from crewai.project import CrewBase, after_kickoff, agent, before_kickoff, crew, llm, task, tool
+from crewai import (
+    Agent,
+    BaseLLM,
+    Crew,
+    CrewOutput,
+    Flow,
+    LLM,
+    Memory,
+    Process,
+    Task,
+    TaskOutput,
+)
+from crewai.project import (
+    CrewBase,
+    after_kickoff,
+    agent,
+    before_kickoff,
+    crew,
+    llm,
+    task,
+    tool,
+)
 from crewai.tools import BaseTool, tool
 from crewai.flow import Flow, and_, listen, or_, persist, router, start
 from crewai.knowledge.source.string_knowledge_source import StringKnowledgeSource
@@ -92,7 +112,9 @@ research = Task(
     expected_output="Three bullet points.",
     agent=researcher,
 )
-crew = Crew(agents=[researcher], tasks=[research], process=Process.sequential, cache=True)
+crew = Crew(
+    agents=[researcher], tasks=[research], process=Process.sequential, cache=True
+)
 out = crew.kickoff(inputs={"topic": "honey bees"})
 print(out.raw)
 ```
@@ -119,10 +141,16 @@ import asyncio
 from crewai import Agent, Crew, Task
 
 
-
 def make_crew() -> Crew:
-    writer = Agent(role="Writer", goal="Write", backstory="Writes short text.", llm="openai/gpt-4.1-mini")
-    task = Task(description="One line on {topic}.", expected_output="One line.", agent=writer)
+    writer = Agent(
+        role="Writer",
+        goal="Write",
+        backstory="Writes short text.",
+        llm="openai/gpt-4.1-mini",
+    )
+    task = Task(
+        description="One line on {topic}.", expected_output="One line.", agent=writer
+    )
     return Crew(agents=[writer], tasks=[task])
 
 
@@ -135,6 +163,7 @@ print([o.raw for o in many])
 
 async def main():
     return await make_crew().akickoff(inputs={"topic": "wasps"})
+
 
 print(asyncio.run(main()).raw)
 ```
@@ -160,8 +189,8 @@ Native providers: openai, anthropic/claude, azure, google/gemini, bedrock/aws, o
 from crewai import LLM
 
 gpt = LLM(model="openai/gpt-4.1-mini", temperature=0.2)  # core install
-local = LLM(model="ollama/llama3")                        # core install, OpenAI-compatible route
-claude = LLM(model="anthropic/claude-sonnet-4-5")         # needs: uv add "crewai[anthropic]"
+local = LLM(model="ollama/llama3")  # core install, OpenAI-compatible route
+claude = LLM(model="anthropic/claude-sonnet-4-5")  # needs: uv add "crewai[anthropic]"
 print(type(gpt).__name__, type(local).__name__, type(claude).__name__)
 ```
 
@@ -174,8 +203,17 @@ from crewai import Agent, BaseLLM, Crew, Task
 
 
 class EchoLLM(BaseLLM):
-    def call(self, messages, tools=None, callbacks=None, available_functions=None,
-             from_task=None, from_agent=None, response_model=None, **kwargs: Any) -> str:
+    def call(
+        self,
+        messages,
+        tools=None,
+        callbacks=None,
+        available_functions=None,
+        from_task=None,
+        from_agent=None,
+        response_model=None,
+        **kwargs: Any,
+    ) -> str:
         return "echo: " + str(messages[-1]["content"])[:40]
 
 
@@ -217,9 +255,15 @@ class Report(BaseModel):
     points: list[str]
 
 
-analyst = Agent(role="Analyst", goal="Summarise", backstory="Concise.", llm="openai/gpt-4.1-mini")
-task = Task(description="Summarise {topic}.", expected_output="A title and points.",
-            agent=analyst, output_pydantic=Report)
+analyst = Agent(
+    role="Analyst", goal="Summarise", backstory="Concise.", llm="openai/gpt-4.1-mini"
+)
+task = Task(
+    description="Summarise {topic}.",
+    expected_output="A title and points.",
+    agent=analyst,
+    output_pydantic=Report,
+)
 out = Crew(agents=[analyst], tasks=[task]).kickoff(inputs={"topic": "bees"})
 assert out.pydantic is not None, "structured output was dropped"
 print(out.pydantic.title, out["points"])
@@ -261,9 +305,16 @@ def under_50_words(output: TaskOutput) -> tuple[bool, Any]:
     return (True, output.raw)
 
 
-writer = Agent(role="Writer", goal="Write", backstory="Brief.", llm="openai/gpt-4.1-mini")
-task = Task(description="Describe {topic}.", expected_output="A short paragraph.", agent=writer,
-            guardrails=[under_50_words, "Must not mention prices"], guardrail_max_retries=2)
+writer = Agent(
+    role="Writer", goal="Write", backstory="Brief.", llm="openai/gpt-4.1-mini"
+)
+task = Task(
+    description="Describe {topic}.",
+    expected_output="A short paragraph.",
+    agent=writer,
+    guardrails=[under_50_words, "Must not mention prices"],
+    guardrail_max_retries=2,
+)
 print(Crew(agents=[writer], tasks=[task]).kickoff(inputs={"topic": "bees"}).raw)
 ```
 
@@ -292,15 +343,33 @@ The embedder config shape is `{"provider": <name>, "config": {...}}`; the OpenAI
 from crewai import Agent, Crew, Memory, Task
 from crewai.knowledge.source.string_knowledge_source import StringKnowledgeSource
 
-embedder = {"provider": "ollama", "config": {"model_name": "nomic-embed-text"}}  # needs: uv add ollama
+embedder = {
+    "provider": "ollama",
+    "config": {"model_name": "nomic-embed-text"},
+}  # needs: uv add ollama
 memory = Memory(llm="openai/gpt-4.1-mini", embedder=embedder)
 facts = StringKnowledgeSource(content="acme was founded in 2020.")
 
-agent = Agent(role="Analyst", goal="Answer", backstory="Uses knowledge.", llm="openai/gpt-4.1-mini")
-task = Task(description="When was acme founded?", expected_output="A year.", agent=agent)
-crew = Crew(agents=[agent], tasks=[task], memory=memory, knowledge_sources=[facts], embedder=embedder)
+agent = Agent(
+    role="Analyst",
+    goal="Answer",
+    backstory="Uses knowledge.",
+    llm="openai/gpt-4.1-mini",
+)
+task = Task(
+    description="When was acme founded?", expected_output="A year.", agent=agent
+)
+crew = Crew(
+    agents=[agent],
+    tasks=[task],
+    memory=memory,
+    knowledge_sources=[facts],
+    embedder=embedder,
+)
 if crew.knowledge is None:
-    print("knowledge failed to initialise - is the ollama package installed and the server running?")
+    print(
+        "knowledge failed to initialise - is the ollama package installed and the server running?"
+    )
 ```
 
 Reset stored data from the project directory with `crewai reset-memories -m` (memory; errors with `Memory memory system is not initialized` if the crew has no memory), `-kn` (knowledge), `-akn` (agent knowledge), `-k` (latest kickoff outputs), `-a` (all). The old `-s`, `-l`, `-e` flags are hidden deprecated aliases that print a warning and reset the unified memory. Storage path and offline embedders: [verify-installed-api.md](references/verify-installed-api.md).

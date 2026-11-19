@@ -107,7 +107,9 @@ Each task has one clear objective. The sequential flow passes context automatica
 ### Essential Parameters
 
 ```python
-Task(description="...", expected_output="...", agent=researcher)  # agent: required for sequential, optional for hierarchical
+Task(
+    description="...", expected_output="...", agent=researcher
+)  # agent: required for sequential, optional for hierarchical
 ```
 
 A sequential crew with an agent-less task fails at `Crew(...)`: `Sequential process error: Agent is missing in the task ...`.
@@ -115,8 +117,12 @@ A sequential crew with an agent-less task fails at `Crew(...)`: `Sequential proc
 ### Task Dependencies with `context`
 
 ```python
-analysis_task = Task(description="Analyze the research findings...", expected_output="...",
-                     agent=analyst, context=[research_task])  # receives only research_task's output
+analysis_task = Task(
+    description="Analyze the research findings...",
+    expected_output="...",
+    agent=analyst,
+    context=[research_task],
+)  # receives only research_task's output
 ```
 
 The rule is the same in sequential and hierarchical crews:
@@ -133,14 +139,19 @@ Use `output_pydantic` or `output_json` when downstream code needs to parse the r
 ```python
 from pydantic import BaseModel
 
+
 class ResearchReport(BaseModel):
     trends: list[str]
     confidence: float
     sources: list[str]
 
-research_task = Task(description="...", agent=researcher,
-                     expected_output="A structured report with trends, confidence score, and sources.",
-                     output_pydantic=ResearchReport)   # agent's output is parsed into this model
+
+research_task = Task(
+    description="...",
+    agent=researcher,
+    expected_output="A structured report with trends, confidence score, and sources.",
+    output_pydantic=ResearchReport,
+)  # agent's output is parsed into this model
 ```
 
 **Important:** `expected_output` is always a **string description** - never a class name. The Pydantic model goes in `output_pydantic`, and the `expected_output` text tells the agent what fields to include. Set only one of `output_pydantic` / `output_json` (both raises `Only one output type can be set`).
@@ -148,9 +159,11 @@ research_task = Task(description="...", agent=researcher,
 Access structured output:
 ```python
 result = crew.kickoff(inputs={...})
-last_task_output = result.pydantic          # Pydantic model from the LAST task (None if it has no output_pydantic)
-all_outputs = result.tasks_output           # List of all TaskOutput objects
-first_task = all_outputs[0].pydantic        # Pydantic from a specific task
+last_task_output = (
+    result.pydantic
+)  # Pydantic model from the LAST task (None if it has no output_pydantic)
+all_outputs = result.tasks_output  # List of all TaskOutput objects
+first_task = all_outputs[0].pydantic  # Pydantic from a specific task
 assert first_task is not None, "structured output was dropped"
 ```
 
@@ -164,7 +177,7 @@ Set `output_pydantic` in Python, not in `tasks.yaml` (section 5). Not `Task(resp
 
 ```python
 pros = Task(..., agent=analyst, async_execution=True)
-cons = Task(..., agent=critic, async_execution=True)    # a DIFFERENT agent
+cons = Task(..., agent=critic, async_execution=True)  # a DIFFERENT agent
 verdict = Task(..., agent=analyst, context=[pros, cons])
 crew = Crew(agents=[analyst, critic], tasks=[pros, cons, verdict])
 ```
@@ -191,10 +204,13 @@ It needs an interactive stdin. In CI, a server, or any run with stdin closed, `i
 ### Callbacks
 
 ```python
-def log_completion(output: TaskOutput) -> None:   # from crewai import TaskOutput
+def log_completion(output: TaskOutput) -> None:  # from crewai import TaskOutput
     print(f"Task completed: {output.description[:50]}...")
 
-Task(..., callback=log_completion)  # called with the TaskOutput after the task and its guardrails finish
+
+Task(
+    ..., callback=log_completion
+)  # called with the TaskOutput after the task and its guardrails finish
 ```
 
 ---
@@ -215,12 +231,21 @@ def validate_word_count(output: TaskOutput) -> tuple[bool, Any]:
     """Ensure output is between 500-2000 words."""
     word_count = len(output.raw.split())
     if word_count < 500:
-        return (False, f"Output too short ({word_count} words). Expand to at least 500 words.")
+        return (
+            False,
+            f"Output too short ({word_count} words). Expand to at least 500 words.",
+        )
     if word_count > 2000:
-        return (False, f"Output too long ({word_count} words). Condense to under 2000 words.")
+        return (
+            False,
+            f"Output too long ({word_count} words). Condense to under 2000 words.",
+        )
     return (True, output.raw)
 
-Task(..., guardrail=validate_word_count, guardrail_max_retries=3)  # max retries (default: 3)
+
+Task(
+    ..., guardrail=validate_word_count, guardrail_max_retries=3
+)  # max retries (default: 3)
 ```
 
 **Return format:** `(bool, Any)` - first element is pass/fail, second is the result on success (a string that becomes the task's raw output - usually `output.raw`; never `None`) or the error message on failure. Return the string, not the `TaskOutput` itself: when the task has `output_pydantic` and its agent has tools, `output.pydantic` is still `None` inside the guardrail, and `(True, output)` keeps it that way, so `result.pydantic` ends up `None`; `(True, output.raw)` lets crewai convert it (verified on 1.15.22 and 1.15.23). Annotate the return as `tuple[bool, Any]` or leave it unannotated: `-> bool` raises `If return type is annotated, it must be Tuple[bool, Any]` at `Task(...)`. Use `guardrail_max_retries`, not the deprecated `max_retries`.
@@ -228,7 +253,11 @@ Task(..., guardrail=validate_word_count, guardrail_max_retries=3)  # max retries
 ### LLM-Based Guardrails
 
 ```python
-Task(..., agent=writer, guardrail="Verify the output contains at least 3 source citations and no speculative claims.")
+Task(
+    ...,
+    agent=writer,
+    guardrail="Verify the output contains at least 3 source citations and no speculative claims.",
+)
 ```
 
 A string guardrail is checked by an extra LLM call made with the task agent's LLM. Good for subjective quality checks. It needs the task to have an `agent`, or `Task(...)` raises `Agent is required to use non-programmatic guardrails`.
@@ -241,11 +270,15 @@ def validate_no_pii(output: TaskOutput) -> tuple[bool, Any]:
         return (False, "Remove email addresses.")
     return (True, output.raw)
 
-Task(..., guardrails=[
-    validate_word_count,           # Function: check length
-    validate_no_pii,               # Function: check for PII
-    "Ensure the tone is professional and appropriate for a business audience.",  # LLM check
-])
+
+Task(
+    ...,
+    guardrails=[
+        validate_word_count,  # Function: check length
+        validate_no_pii,  # Function: check for PII
+        "Ensure the tone is professional and appropriate for a business audience.",  # LLM check
+    ],
+)
 ```
 
 Guardrails execute sequentially. Each receives the output of the previous guardrail (a string result replaces `output.raw` for the next one). Mix function-based (deterministic) and LLM-based (subjective) checks. If you set both `guardrails=[...]` and `guardrail=`, only the list is used.
@@ -290,8 +323,10 @@ from pydantic import BaseModel
 from crewai import Agent, Crew, Task
 from crewai.project import CrewBase, agent, crew, task
 
+
 class Recommendations(BaseModel):
     items: list[str]
+
 
 @CrewBase
 class ResearchCrew:
@@ -307,11 +342,15 @@ class ResearchCrew:
     @task
     def analysis_task(self) -> Task:
         # context and agent come from YAML; the model class must be set here in Python
-        return Task(config=self.tasks_config["analysis_task"], output_pydantic=Recommendations)
+        return Task(
+            config=self.tasks_config["analysis_task"], output_pydantic=Recommendations
+        )
 
     @task
     def report_task(self) -> Task:
-        return Task(config=self.tasks_config["report_task"])   # output_file comes from YAML
+        return Task(
+            config=self.tasks_config["report_task"]
+        )  # output_file comes from YAML
 
     @crew
     def crew(self) -> Crew:
@@ -336,9 +375,9 @@ You don't need `context=` for that - it's implicit. Use it to narrow or reshape 
 
 ```python
 # Diamond dependency pattern
-task_a = Task(...)                            # Entry point
-task_b = Task(..., context=[task_a])          # Depends on A
-task_c = Task(..., context=[task_a])          # Also depends on A
+task_a = Task(...)  # Entry point
+task_b = Task(..., context=[task_a])  # Depends on A
+task_c = Task(..., context=[task_a])  # Also depends on A
 task_d = Task(..., context=[task_b, task_c])  # Depends on both B and C
 ```
 
@@ -348,20 +387,31 @@ task_d = Task(..., context=[task_b, task_c])  # Depends on both B and C
 from pydantic import BaseModel
 
 from crewai import Task, TaskOutput
-from crewai.tasks.conditional_task import ConditionalTask   # not crewai.task
+from crewai.tasks.conditional_task import ConditionalTask  # not crewai.task
+
 
 class Items(BaseModel):
     items: list[str]
 
-gather = Task(description="List data sources for {topic}...", expected_output="A list of sources.",
-              agent=researcher, output_pydantic=Items)   # the condition below reads .pydantic
+
+gather = Task(
+    description="List data sources for {topic}...",
+    expected_output="A list of sources.",
+    agent=researcher,
+    output_pydantic=Items,
+)  # the condition below reads .pydantic
+
 
 def needs_more_data(output: TaskOutput) -> bool:
     return len(output.pydantic.items) < 10
 
-extra_research = ConditionalTask(description="Fetch additional data sources...", expected_output="...",
-                                 agent=researcher,
-                                 condition=needs_more_data)  # runs only if the previous output has < 10 items
+
+extra_research = ConditionalTask(
+    description="Fetch additional data sources...",
+    expected_output="...",
+    agent=researcher,
+    condition=needs_more_data,
+)  # runs only if the previous output has < 10 items
 ```
 
 The condition receives the `TaskOutput` of the task immediately before it. A skipped conditional task still appears in `result.tasks_output`, with `raw == ""`. A `ConditionalTask` cannot be the first task, cannot be async, and a crew cannot consist only of conditional tasks.
@@ -375,8 +425,12 @@ Tasks can have their own tools that replace the agent's default tools for that s
 ```python
 from crewai_tools import SerperDevTool, ScrapeWebsiteTool
 
-Task(description="Search for and scrape the top 5 articles about {topic}...", expected_output="...",
-     agent=researcher, tools=[SerperDevTool(), ScrapeWebsiteTool()])  # task-specific tools
+Task(
+    description="Search for and scrape the top 5 articles about {topic}...",
+    expected_output="...",
+    agent=researcher,
+    tools=[SerperDevTool(), ScrapeWebsiteTool()],
+)  # task-specific tools
 ```
 
 If `tools` is set on the task, the agent gets **only** those tools for that task - the lists are not merged. Leave it unset to use the agent's tools.

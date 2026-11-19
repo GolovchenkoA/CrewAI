@@ -31,8 +31,8 @@ from crewai import Crew
 crew = Crew(
     agents=[...],
     tasks=[...],
-    memory=True,                       # Memory for this crew
-    embedder={"provider": "onnx"},     # used for memory too; omit for OpenAI embeddings
+    memory=True,  # Memory for this crew
+    embedder={"provider": "onnx"},  # used for memory too; omit for OpenAI embeddings
 )
 ```
 
@@ -45,21 +45,17 @@ from crewai import Memory
 
 memory = Memory(
     # Scoring weights (keep them summing to about 1.0; not enforced)
-    recency_weight=0.3,              # How much to favor recent memories
-    semantic_weight=0.5,             # How much to favor semantic similarity
-    importance_weight=0.2,           # How much to favor important memories
-
+    recency_weight=0.3,  # How much to favor recent memories
+    semantic_weight=0.5,  # How much to favor semantic similarity
+    importance_weight=0.2,  # How much to favor important memories
     # Behavior
-    recency_half_life_days=30,       # Memory decay half-life
-    consolidation_threshold=0.85,    # Dedup similarity threshold
-    exploration_budget=1,            # Deep recall exploration rounds
-
+    recency_half_life_days=30,  # Memory decay half-life
+    consolidation_threshold=0.85,  # Dedup similarity threshold
+    exploration_budget=1,  # Deep recall exploration rounds
     # LLM for memory analysis (default: OpenAI gpt-5.4-mini)
     llm="anthropic/claude-haiku-4-5",
-
     # Embedder (default: OpenAI text-embedding-3-large)
     embedder={"provider": "onnx"},
-
     # Storage backend (default: LanceDB)
     storage="lancedb",
 )
@@ -96,6 +92,7 @@ A Flow creates its own `Memory()` with the OpenAI defaults unless you give it on
 ```python
 from crewai import Memory
 from crewai.flow import Flow, listen, start
+
 
 class ResearchFlow(Flow):
     memory = Memory(llm="anthropic/claude-haiku-4-5", embedder={"provider": "onnx"})
@@ -181,8 +178,8 @@ agent = Agent(
     backstory="...",
     knowledge_sources=[pdf_source],
     knowledge_config=KnowledgeConfig(
-        results_limit=10,        # Number of chunks to return (default: 5)
-        score_threshold=0.5,     # Minimum relevance score (default: 0.6)
+        results_limit=10,  # Number of chunks to return (default: 5)
+        score_threshold=0.5,  # Minimum relevance score (default: 0.6)
     ),
 )
 ```
@@ -206,7 +203,9 @@ Runs `all-MiniLM-L6-v2` locally through `onnxruntime`, which core crewai already
 ```python
 embedder = {
     "provider": "openai",
-    "config": {"model_name": "text-embedding-3-small"},   # default: text-embedding-3-large
+    "config": {
+        "model_name": "text-embedding-3-small"
+    },  # default: text-embedding-3-large
 }
 ```
 
@@ -219,7 +218,7 @@ embedder = {
     "provider": "ollama",
     "config": {
         "model_name": "mxbai-embed-large",
-        "url": "http://localhost:11434/api/embeddings",   # the default
+        "url": "http://localhost:11434/api/embeddings",  # the default
     },
 }
 ```
@@ -232,7 +231,7 @@ Needs the `ollama` package and a running Ollama server.
 embedder = {
     "provider": "google-generativeai",
     "config": {
-        "model_name": "gemini-embedding-001",   # or text-embedding-005, text-multilingual-embedding-002
+        "model_name": "gemini-embedding-001",  # or text-embedding-005, text-multilingual-embedding-002
         "api_key": "your-api-key",
     },
 }
@@ -246,7 +245,7 @@ Any other model name (for example `models/text-embedding-004`) is a `ValidationE
 embedder = {
     "provider": "azure",
     "config": {
-        "deployment_id": "your-embedding-deployment",   # required
+        "deployment_id": "your-embedding-deployment",  # required
         "model_name": "text-embedding-3-small",
         "api_key": "your-api-key",
         "api_base": "https://your-resource.openai.azure.com/",
@@ -275,7 +274,7 @@ embedder = {
 embedder = {
     "provider": "voyageai",
     "config": {
-        "model": "voyage-3",    # VoyageAI uses "model", not "model_name"
+        "model": "voyage-3",  # VoyageAI uses "model", not "model_name"
         "api_key": "your-api-key",
     },
 }
@@ -286,8 +285,14 @@ Needs `uv add voyageai`.
 ### Sentence Transformers (Local) and HuggingFace (Hosted)
 
 ```python
-embedder = {"provider": "sentence-transformer", "config": {"model_name": "all-MiniLM-L6-v2"}}  # local, needs sentence-transformers
-embedder = {"provider": "huggingface", "config": {"model_name": "sentence-transformers/all-MiniLM-L6-v2"}}  # HF Inference API
+embedder = {
+    "provider": "sentence-transformer",
+    "config": {"model_name": "all-MiniLM-L6-v2"},
+}  # local, needs sentence-transformers
+embedder = {
+    "provider": "huggingface",
+    "config": {"model_name": "sentence-transformers/all-MiniLM-L6-v2"},
+}  # HF Inference API
 ```
 
 The `huggingface` provider calls the hosted Inference API and needs a token (`HF_TOKEN` or `api_key`); it is not local.
@@ -348,20 +353,26 @@ agent = Agent(
     knowledge_sources=[PDFKnowledgeSource(file_paths=["internal_report.pdf"])],
     embedder={"provider": "onnx"},
 )
-crew = Crew(agents=[agent], tasks=[Task(description="...", expected_output="...", agent=agent)])
+crew = Crew(
+    agents=[agent], tasks=[Task(description="...", expected_output="...", agent=agent)]
+)
 ```
 
 ### Crew with Shared Memory + Per-Agent Knowledge
 
 ```python
 researcher = Agent(
-    role="Researcher", goal="...", backstory="...",
+    role="Researcher",
+    goal="...",
+    backstory="...",
     knowledge_sources=[research_docs],
     embedder={"provider": "onnx"},
 )
 
 writer = Agent(
-    role="Writer", goal="...", backstory="...",
+    role="Writer",
+    goal="...",
+    backstory="...",
     knowledge_sources=[style_guide],
     embedder={"provider": "onnx"},
 )
@@ -369,8 +380,8 @@ writer = Agent(
 crew = Crew(
     agents=[researcher, writer],
     tasks=[research_task, writing_task],
-    memory=True,                       # Shared memory across agents
-    embedder={"provider": "onnx"},     # Embedder for memory
+    memory=True,  # Shared memory across agents
+    embedder={"provider": "onnx"},  # Embedder for memory
 )
 ```
 

@@ -44,12 +44,12 @@ agent = Agent(
     goal="Research and analyze information",
     backstory="Expert researcher with access to multiple data sources.",
     mcps=[
-        "https://mcp.exa.ai/mcp",                       # Remote HTTP server (must start with https://)
-        "https://mcp.example.com/mcp#get_forecast",     # Specific tool via #
-        "snowflake",                                    # Integration connected in your CrewAI AMP account
-        "stripe#list_invoices",                         # Specific tool from an AMP-connected integration
-        "github#search_repositories",                   # GitHub, via AMP
-    ]
+        "https://mcp.exa.ai/mcp",  # Remote HTTP server (must start with https://)
+        "https://mcp.example.com/mcp#get_forecast",  # Specific tool via #
+        "snowflake",  # Integration connected in your CrewAI AMP account
+        "stripe#list_invoices",  # Specific tool from an AMP-connected integration
+        "github#search_repositories",  # GitHub, via AMP
+    ],
 )
 ```
 
@@ -143,7 +143,11 @@ from crewai.mcp import MCPServerStdio, create_static_tool_filter
 
 server = MCPServerStdio(
     command="npx",
-    args=["-y", "@modelcontextprotocol/server-filesystem", "./data"],   # needs an allowed dir: crewai does not send MCP roots
+    args=[
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "./data",
+    ],  # needs an allowed dir: crewai does not send MCP roots
     tool_filter=create_static_tool_filter(
         allowed_tool_names=["read_text_file", "list_directory"]
     ),
@@ -153,7 +157,7 @@ server = MCPServerStdio(
 Or use the `#tool_name` shorthand in string references - one reference per tool:
 
 ```python
-mcps=["github#search_repositories", "github#list_issues"]
+mcps = ["github#search_repositories", "github#list_issues"]
 ```
 
 A comma list never works: on a slug (`"github#search_repositories,list_issues"`) it raises the `Invalid MCP reference` ValidationError above; on an `https://` URL it is accepted but selects **zero** tools, with no error (verified: `"https://mcp.exa.ai/mcp#web_search_exa,web_fetch_exa"` -> `[]`, while `#web_search_exa` alone -> one tool). `tool_filter` names are matched against the sanitized tool name (a server tool `getForecast` is listed as `get_forecast`).
@@ -166,16 +170,18 @@ You can combine `mcps`, native `tools`, and platform `apps` on the same agent:
 
 ```python
 from crewai import Agent
-from crewai_tools import SerperDevTool  # Native tool (no official MCP server for Serper)
+from crewai_tools import (
+    SerperDevTool,
+)  # Native tool (no official MCP server for Serper)
 
 agent = Agent(
     role="Full-Featured Researcher",
     goal="Research using all available sources",
     backstory="...",
-    tools=[SerperDevTool()],            # Native tool — no MCP alternative
-    mcps=[                               # Official MCP servers
+    tools=[SerperDevTool()],  # Native tool — no MCP alternative
+    mcps=[  # Official MCP servers
         "https://mcp.exa.ai/mcp",
-        "github",                         # AMP-connected integration
+        "github",  # AMP-connected integration
     ],
 )
 ```
@@ -231,7 +237,9 @@ from mcp import StdioServerParameters
 server_params = StdioServerParameters(
     command="npx",
     args=["-y", "@modelcontextprotocol/server-github"],
-    env={"GITHUB_PERSONAL_ACCESS_TOKEN": "<your-token>"},   # the variable this server reads
+    env={
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "<your-token>"
+    },  # the variable this server reads
 )
 
 # Context manager (recommended) — auto-starts and stops.
@@ -247,7 +255,9 @@ with MCPServerAdapter(server_params, "list_issues") as tools:
     result = agent.kickoff("List recent issues in crewAIInc/crewAI")
 
 # Manual lifecycle (when you need more control)
-adapter = MCPServerAdapter(server_params)   # the constructor starts the server; calling start() again raises
+adapter = MCPServerAdapter(
+    server_params
+)  # the constructor starts the server; calling start() again raises
 try:
     tools = adapter.tools
     # ... use tools with agents ...

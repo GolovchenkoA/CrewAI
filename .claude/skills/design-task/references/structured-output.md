@@ -25,21 +25,23 @@ Structured output works differently at each abstraction level:
 from crewai import LLM
 from pydantic import BaseModel
 
+
 class Sentiment(BaseModel):
-    label: str       # "positive", "negative", "neutral"
+    label: str  # "positive", "negative", "neutral"
     confidence: float
     reasoning: str
+
 
 llm = LLM(model="openai/gpt-4o")
 text = "I love this product, it works perfectly."
 
 result = llm.call(
     messages=[{"role": "user", "content": f"Analyze sentiment: {text}"}],
-    response_model=Sentiment,          # NOT response_format - that raises TypeError here
+    response_model=Sentiment,  # NOT response_format - that raises TypeError here
 )
 
 # Returns Pydantic object DIRECTLY
-print(result.label)       # "positive"
+print(result.label)  # "positive"
 print(result.confidence)  # 0.95
 ```
 
@@ -53,10 +55,12 @@ print(result.confidence)  # 0.95
 from crewai import Agent
 from pydantic import BaseModel
 
+
 class ResearchFindings(BaseModel):
     main_points: list[str]
     sources: list[str]
     confidence: float
+
 
 researcher = Agent(
     role="Researcher",
@@ -72,10 +76,10 @@ result = researcher.kickoff(
 
 # Returns LiteAgentOutput — access via .pydantic
 # Agent.kickoff takes response_format (response_model raises TypeError here)
-print(result.pydantic.main_points)   # list[str]
-print(result.pydantic.sources)       # list[str]
-print(result.raw)                    # Raw string output
-print(result.usage_metrics)          # Token usage dict
+print(result.pydantic.main_points)  # list[str]
+print(result.pydantic.sources)  # list[str]
+print(result.raw)  # Raw string output
+print(result.usage_metrics)  # Token usage dict
 ```
 
 ---
@@ -88,16 +92,18 @@ print(result.usage_metrics)          # Token usage dict
 from pydantic import BaseModel
 from crewai import Task
 
+
 class BlogPost(BaseModel):
     title: str
     content: str
     tags: list[str]
 
+
 task = Task(
     description="Write a blog post about {topic}",
     expected_output="A blog post with title, content, and relevant tags.",  # Always a string!
     agent=writer,
-    output_pydantic=BlogPost,          # set in Python, never in tasks.yaml
+    output_pydantic=BlogPost,  # set in Python, never in tasks.yaml
 )
 ```
 
@@ -106,13 +112,13 @@ task = Task(
 result = crew.kickoff(inputs={"topic": "AI"})
 
 # From CrewOutput (last task)
-result.pydantic.title       # str
-result.pydantic.tags        # list[str]
+result.pydantic.title  # str
+result.pydantic.tags  # list[str]
 
 # From specific task output
 task_output = result.tasks_output[0]
 task_output.pydantic.title  # str
-task_output.raw             # Raw string
+task_output.raw  # Raw string
 ```
 
 ### output_json
@@ -130,8 +136,8 @@ task = Task(
 ```python
 result = crew.kickoff(inputs={"topic": "AI"})
 
-result.json_dict            # dict — parsed JSON
-result.json_dict["title"]   # str
+result.json_dict  # dict — parsed JSON
+result.json_dict["title"]  # str
 ```
 
 ### Key Difference
@@ -153,18 +159,18 @@ The crew's output comes from the **last task** in the sequence:
 result = crew.kickoff(inputs={"topic": "AI"})
 
 # Last task's output
-result.raw                  # str — always available
-result.pydantic             # Pydantic model (if last task has output_pydantic, else None)
-result.json_dict            # dict (if last task has output_json, else None)
-result["title"]             # reads from pydantic / json_dict
+result.raw  # str — always available
+result.pydantic  # Pydantic model (if last task has output_pydantic, else None)
+result.json_dict  # dict (if last task has output_json, else None)
+result["title"]  # reads from pydantic / json_dict
 
 # All task outputs
-result.tasks_output         # list[TaskOutput]
+result.tasks_output  # list[TaskOutput]
 result.tasks_output[0].raw  # First task's raw output
 result.tasks_output[1].pydantic  # Second task's structured output
 
 # Token usage
-result.token_usage          # UsageMetrics
+result.token_usage  # UsageMetrics
 ```
 
 ---
@@ -181,6 +187,7 @@ class Report(BaseModel):
     key_findings: list[str]
     confidence: float
 
+
 # Bad — too nested, LLM struggles
 class Report(BaseModel):
     metadata: Metadata
@@ -193,6 +200,7 @@ class Report(BaseModel):
 
 ```python
 from pydantic import BaseModel, Field
+
 
 class Report(BaseModel):
     title: str = Field(description="A concise, descriptive title")
@@ -207,9 +215,9 @@ Field descriptions help the LLM understand what each field expects.
 ```python
 class Analysis(BaseModel):
     summary: str
-    risk_level: str = "medium"           # Default if LLM omits
-    sources: list[str] = []              # Default empty list
-    notes: str | None = None             # Explicitly optional
+    risk_level: str = "medium"  # Default if LLM omits
+    sources: list[str] = []  # Default empty list
+    notes: str | None = None  # Explicitly optional
 ```
 
 ---

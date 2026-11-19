@@ -32,7 +32,10 @@ class ResearchCrew:
         return Agent(
             config=self.agents_config["researcher"],  # type: ignore[index]
             llm=make_llm(),
-            tools=[DirectoryReadTool(directory=os.getenv("NOTES_DIR", "notes")), FileReadTool()],
+            tools=[
+                DirectoryReadTool(directory=os.getenv("NOTES_DIR", "notes")),
+                FileReadTool(),
+            ],
             allow_delegation=env_bool("ALLOW_DELEGATION", True),
             max_iter=8,
             verbose=env_bool("VERBOSE", True),

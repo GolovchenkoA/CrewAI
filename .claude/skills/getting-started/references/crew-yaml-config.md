@@ -77,11 +77,12 @@ from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from crewai_tools import SerperDevTool
 
+
 @CrewBase
 class ResearchCrew:
     """Research and reporting crew."""
 
-    agents_config = "config/agents.yaml"   # these two paths are also the defaults
+    agents_config = "config/agents.yaml"  # these two paths are also the defaults
     tasks_config = "config/tasks.yaml"
 
     @agent
@@ -105,7 +106,9 @@ class ResearchCrew:
     def reporting_task(self) -> Task:
         return Task(
             config=self.tasks_config["reporting_task"],
-            context=[self.research_task()],  # Explicit dependency (optional in sequential)
+            context=[
+                self.research_task()
+            ],  # Explicit dependency (optional in sequential)
             output_file="output/report.md",
         )
 
@@ -113,7 +116,7 @@ class ResearchCrew:
     def crew(self) -> Crew:
         return Crew(
             agents=self.agents,  # auto-collected by @agent
-            tasks=self.tasks,    # auto-collected by @task
+            tasks=self.tasks,  # auto-collected by @task
             process=Process.sequential,
             verbose=True,
         )

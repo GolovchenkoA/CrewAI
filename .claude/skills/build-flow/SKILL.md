@@ -64,7 +64,7 @@ from crewai.flow import Flow, listen, start
 
 
 class ReportState(BaseModel):
-    topic: str = ""          # give every field a default
+    topic: str = ""  # give every field a default
     draft: str = ""
     notes: list[str] = []
 
@@ -76,15 +76,15 @@ class ReportFlow(Flow[ReportState]):
         return self.state.topic.upper()
 
     @listen(plan)
-    def write(self, plan_output):          # receives plan()'s return value
+    def write(self, plan_output):  # receives plan()'s return value
         self.state.draft = f"Draft about {plan_output}"
         return self.state.draft
 
 
 flow = ReportFlow()
-result = flow.kickoff(inputs={"topic": "bees"})   # inputs set state BEFORE @start runs
-print(result)           # "Draft about BEES" - kickoff returns the last method's output
-print(flow.state.id)    # UUID string, generated per run
+result = flow.kickoff(inputs={"topic": "bees"})  # inputs set state BEFORE @start runs
+print(result)  # "Draft about BEES" - kickoff returns the last method's output
+print(flow.state.id)  # UUID string, generated per run
 ```
 
 State rules (each one prevents a real failure):
@@ -122,7 +122,7 @@ class TicketFlow(Flow[TicketState]):
         return self.state.text
 
     @router(receive)
-    def triage(self) -> Literal["urgent", "normal"]:   # labels, not method names
+    def triage(self) -> Literal["urgent", "normal"]:  # labels, not method names
         return "urgent" if "outage" in self.state.text else "normal"
 
     @listen("urgent")
@@ -136,7 +136,7 @@ class TicketFlow(Flow[TicketState]):
 
 flow = TicketFlow()
 flow.kickoff(inputs={"text": "outage in eu-west"})
-print(flow.state.queue)   # oncall
+print(flow.state.queue)  # oncall
 ```
 
 | Rule | Why |
@@ -176,7 +176,9 @@ class FanIn(Flow):
 
 
 FanIn().kickoff()
-print(calls)   # e.g. [('or', 'A'), ('and', 'B')] - the start methods run concurrently, so the values (and order) can vary
+print(
+    calls
+)  # e.g. [('or', 'A'), ('and', 'B')] - the start methods run concurrently, so the values (and order) can vary
 ```
 
 - **`or_` fires once per kickoff**, on the first condition to complete. It does not run again when the second one completes, so you do not need a "seen" flag.
@@ -197,18 +199,29 @@ from crewai.flow import Flow, listen, start
 class ResearchFlow(Flow):
     @start()
     def research(self):
-        researcher = Agent(role="Researcher", goal="Research {topic}",
-                           backstory="You find facts.", llm="openai/gpt-4o-mini")
-        task = Task(description="List three facts about {topic}.",
-                    expected_output="Three bullets.", agent=researcher)
+        researcher = Agent(
+            role="Researcher",
+            goal="Research {topic}",
+            backstory="You find facts.",
+            llm="openai/gpt-4o-mini",
+        )
+        task = Task(
+            description="List three facts about {topic}.",
+            expected_output="Three bullets.",
+            agent=researcher,
+        )
         out = Crew(agents=[researcher], tasks=[task]).kickoff(inputs={"topic": "bees"})
-        return out.raw                       # CrewOutput: .raw .pydantic .json_dict
+        return out.raw  # CrewOutput: .raw .pydantic .json_dict
 
     @listen(research)
     def summarize(self, facts):
-        writer = Agent(role="Writer", goal="Summarize", backstory="Concise.",
-                       llm="openai/gpt-4o-mini")
-        return writer.kickoff(f"One sentence summary: {facts}").raw   # LiteAgentOutput
+        writer = Agent(
+            role="Writer",
+            goal="Summarize",
+            backstory="Concise.",
+            llm="openai/gpt-4o-mini",
+        )
+        return writer.kickoff(f"One sentence summary: {facts}").raw  # LiteAgentOutput
 ```
 
 | Method kind | Call | Wrong form |
@@ -227,14 +240,18 @@ class ResearchFlow(Flow):
 
 ```python
 from pydantic import BaseModel
-from crewai.flow import Flow, persist, start   # or: from crewai.flow.persistence import persist
+from crewai.flow import (
+    Flow,
+    persist,
+    start,
+)  # or: from crewai.flow.persistence import persist
 
 
 class CounterState(BaseModel):
     count: int = 0
 
 
-@persist()                      # class level: state saved after every method
+@persist()  # class level: state saved after every method
 class CounterFlow(Flow[CounterState]):
     @start()
     def bump(self):
@@ -243,10 +260,10 @@ class CounterFlow(Flow[CounterState]):
 
 
 first = CounterFlow()
-first.kickoff()                                        # count == 1
+first.kickoff()  # count == 1
 second = CounterFlow()
-second.kickoff(restore_from_state_id=first.state.id)   # count == 2
-print(second.state.id != first.state.id)               # True: a fork with a new id
+second.kickoff(restore_from_state_id=first.state.id)  # count == 2
+print(second.state.id != first.state.id)  # True: a fork with a new id
 ```
 
 | You want | Do | Not |
@@ -296,10 +313,12 @@ class EtlFlow(Flow):
         return f"loaded {rows}"
 
 
-flow = EtlFlow(checkpoint=CheckpointConfig(
-    location="./.checkpoints",
-    on_events=["method_execution_finished"],   # required for flows, see below
-))
+flow = EtlFlow(
+    checkpoint=CheckpointConfig(
+        location="./.checkpoints",
+        on_events=["method_execution_finished"],  # required for flows, see below
+    )
+)
 flow.kickoff()
 ```
 
@@ -323,8 +342,8 @@ class ReviewFlow(Flow):
     @human_feedback(
         message="Approve this draft?",
         emit=["needs_revision", "approved"],
-        llm="openai/gpt-4o-mini",            # maps free-text feedback to one label
-        default_outcome="needs_revision",    # used when feedback is empty
+        llm="openai/gpt-4o-mini",  # maps free-text feedback to one label
+        default_outcome="needs_revision",  # used when feedback is empty
     )
     def draft(self):
         return "Draft v1"
@@ -352,7 +371,7 @@ class ReviewFlow(Flow):
 
 ```python
 path = TicketFlow().plot("ticket_flow.html", show=False)
-print(path)   # /tmp/.../crewai_flow_xxxx/ticket_flow.html
+print(path)  # /tmp/.../crewai_flow_xxxx/ticket_flow.html
 ```
 
 - `plot(filename="crewai_flow.html", show=True)` writes **interactive HTML (plus a .js and .css) into a new temp directory** and returns the absolute path. Nothing is written to the current directory and there is no PNG. Copy the files if you need to keep them.

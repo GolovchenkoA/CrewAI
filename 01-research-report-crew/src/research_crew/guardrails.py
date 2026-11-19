@@ -21,12 +21,20 @@ def report_guardrail(output: TaskOutput) -> tuple[bool, Any]:
     missing = [
         name
         for name in REQUIRED_SECTIONS
-        if not re.search(rf"^#{{1,3}}\s*.*{re.escape(name)}", text, re.IGNORECASE | re.MULTILINE)
+        if not re.search(
+            rf"^#{{1,3}}\s*.*{re.escape(name)}", text, re.IGNORECASE | re.MULTILINE
+        )
     ]
     if missing:
-        return (False, f"Missing required Markdown headings: {', '.join(missing)}. Add them.")
+        return (
+            False,
+            f"Missing required Markdown headings: {', '.join(missing)}. Add them.",
+        )
     min_words = int(os.getenv("MIN_REPORT_WORDS", "250"))
     words = len(text.split())
     if words < min_words:
-        return (False, f"Report has {words} words; it needs at least {min_words}. Expand it.")
+        return (
+            False,
+            f"Report has {words} words; it needs at least {min_words}. Expand it.",
+        )
     return (True, text)

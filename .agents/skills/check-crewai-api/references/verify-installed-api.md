@@ -24,13 +24,20 @@ The CLI is a separate package (`crewai_cli`); `crewai version` and `import crewa
 ```python
 from crewai import Agent, Crew, Task
 
-for cls, name in [(Task, "response_model"), (Task, "response_format"),
-                  (Crew, "memory_config"), (Agent, "max_iter"), (Crew, "cache")]:
+for cls, name in [
+    (Task, "response_model"),
+    (Task, "response_format"),
+    (Crew, "memory_config"),
+    (Agent, "max_iter"),
+    (Crew, "cache"),
+]:
     field = cls.model_fields.get(name)
     if field is None:
         print(f"{cls.__name__}.{name}: NOT A FIELD - silently ignored if passed")
     else:
-        print(f"{cls.__name__}.{name}: default={field.default!r} deprecated={field.deprecated!r}")
+        print(
+            f"{cls.__name__}.{name}: default={field.default!r} deprecated={field.deprecated!r}"
+        )
 ```
 
 Expected on 1.15.22-1.15.23: `Task.response_model` default `None`; `Task.response_format` and `Crew.memory_config` are not fields; `Agent.max_iter` default `25`; `Crew.cache` default `False`.
@@ -103,7 +110,9 @@ from chromadb import EmbeddingFunction
 
 from crewai import Agent, Crew, Task
 from crewai.knowledge.source.string_knowledge_source import StringKnowledgeSource
-from crewai.rag.embeddings.providers.custom.embedding_callable import CustomEmbeddingFunction
+from crewai.rag.embeddings.providers.custom.embedding_callable import (
+    CustomEmbeddingFunction,
+)
 
 
 class ConstantEmbedding(CustomEmbeddingFunction, EmbeddingFunction):
@@ -118,13 +127,23 @@ class ConstantEmbedding(CustomEmbeddingFunction, EmbeddingFunction):
         return "constant"
 
 
-agent = Agent(role="Analyst", goal="Answer", backstory="Uses knowledge.", llm="openai/gpt-4.1-mini")
-task = Task(description="When was acme founded?", expected_output="A year.", agent=agent)
+agent = Agent(
+    role="Analyst",
+    goal="Answer",
+    backstory="Uses knowledge.",
+    llm="openai/gpt-4.1-mini",
+)
+task = Task(
+    description="When was acme founded?", expected_output="A year.", agent=agent
+)
 crew = Crew(
     agents=[agent],
     tasks=[task],
     knowledge_sources=[StringKnowledgeSource(content="acme was founded in 2020.")],
-    embedder={"provider": "custom", "config": {"embedding_callable": ConstantEmbedding}},
+    embedder={
+        "provider": "custom",
+        "config": {"embedding_callable": ConstantEmbedding},
+    },
 )
 assert crew.knowledge is not None, "knowledge failed to initialise"
 ```

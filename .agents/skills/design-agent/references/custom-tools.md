@@ -11,6 +11,7 @@ Best for quick, single-function tools.
 ```python
 from crewai.tools import tool
 
+
 @tool("Search Database")
 def search_database(query: str) -> str:
     """Search the internal database for relevant records."""
@@ -40,10 +41,13 @@ Best for tools with configuration, state, or complex input schemas.
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 
+
 class SearchInput(BaseModel):
     """Input schema for the database search tool."""
+
     query: str = Field(..., description="The search query string")
     limit: int = Field(default=10, description="Max results to return")
+
 
 class DatabaseSearchTool(BaseTool):
     name: str = "Search Database"
@@ -76,6 +80,7 @@ For I/O-bound operations (API calls, web requests), make the function itself asy
 import aiohttp
 from crewai.tools import tool
 
+
 @tool("Fetch Webpage")
 async def fetch_webpage(url: str) -> str:
     """Fetch and return the text content of a webpage."""
@@ -98,9 +103,11 @@ def expensive_lookup(query: str) -> str:
     """Look up data from an expensive external API."""
     return api.query(query)
 
+
 def should_cache(arguments: dict, result: str) -> bool:
     """Only cache successful, non-empty results."""
     return len(result) > 0 and "error" not in result.lower()
+
 
 expensive_lookup.cache_function = should_cache
 ```

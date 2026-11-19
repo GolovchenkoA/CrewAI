@@ -31,6 +31,7 @@ pip install httpx
 export CREWAI_DEPLOYMENT_URL="https://<your-deployment>.crewai.com"
 export CREWAI_DEPLOYMENT_TOKEN="<your-bearer-token>"
 """
+
 from __future__ import annotations
 
 import json
@@ -50,16 +51,24 @@ RETRYABLE_STATUS = {502, 503, 504}
 class DeployedCrewError(Exception):
     """Base class. Every subclass carries the kickoff_id when there is one."""
 
-    def __init__(self, message: str, kickoff_id: str | None = None, payload: Any = None):
+    def __init__(
+        self, message: str, kickoff_id: str | None = None, payload: Any = None
+    ):
         super().__init__(message)
         self.kickoff_id = kickoff_id
         self.payload = payload
 
 
 class MissingInputsError(DeployedCrewError): ...
+
+
 class RunFailed(DeployedCrewError): ...
-class RunPaused(DeployedCrewError): ...       # waiting for human feedback (POST /resume)
-class RunTimeout(DeployedCrewError): ...      # deadline passed; the run may still be going
+
+
+class RunPaused(DeployedCrewError): ...  # waiting for human feedback (POST /resume)
+
+
+class RunTimeout(DeployedCrewError): ...  # deadline passed; the run may still be going
 
 
 class DeployedCrew:
@@ -68,7 +77,7 @@ class DeployedCrew:
         base_url: str,
         token: str,
         *,
-        request_timeout: float = 30.0,     # normal calls
+        request_timeout: float = 30.0,  # normal calls
         first_call_timeout: float = 180.0,  # the first response can be slow; allow for it
         retries: int = 4,
     ) -> None:
@@ -83,31 +92,39 @@ class DeployedCrew:
         )
 
     # -- low level -------------------------------------------------------
-    def _request(self, method: str, path: str, *, retry_on_timeout: bool, **kw) -> httpx.Response:
+    def _request(
+        self, method: str, path: str, *, retry_on_timeout: bool, **kw
+    ) -> httpx.Response:
         timeout = self.request_timeout if self._warm else self.first_call_timeout
         for attempt in range(self.retries + 1):
             try:
-                resp = self._http.request(method, self.base_url + path, timeout=timeout, **kw)
+                resp = self._http.request(
+                    method, self.base_url + path, timeout=timeout, **kw
+                )
             except httpx.ConnectError:
                 # The request never reached the server, so a retry cannot duplicate work.
                 if attempt == self.retries:
                     raise
-                time.sleep(min(2 ** attempt, 30))
+                time.sleep(min(2**attempt, 30))
                 continue
             except httpx.TimeoutException:
                 # A POST /kickoff that timed out may still have started a run:
                 # do not resend it blindly.
                 if not retry_on_timeout or attempt == self.retries:
                     raise
-                time.sleep(min(2 ** attempt, 30))
+                time.sleep(min(2**attempt, 30))
                 continue
             # POST /kickoff (retry_on_timeout=False): after a 502 or 504 the run may have
             # started, so only a 503 is resent.
-            if resp.status_code in RETRYABLE_STATUS and attempt < self.retries and (
-                retry_on_timeout or resp.status_code == 503
+            if (
+                resp.status_code in RETRYABLE_STATUS
+                and attempt < self.retries
+                and (retry_on_timeout or resp.status_code == 503)
             ):
                 retry_after = resp.headers.get("Retry-After", "")
-                delay = float(retry_after) if retry_after.isdigit() else min(2 ** attempt, 30)
+                delay = (
+                    float(retry_after) if retry_after.isdigit() else min(2**attempt, 30)
+                )
                 time.sleep(delay)
                 continue
             self._warm = True
@@ -115,12 +132,16 @@ class DeployedCrew:
         raise AssertionError("unreachable")
 
     @staticmethod
-    def _json_or_raise(resp: httpx.Response, what: str, kickoff_id: str | None = None) -> Any:
+    def _json_or_raise(
+        resp: httpx.Response, what: str, kickoff_id: str | None = None
+    ) -> Any:
         if resp.status_code == 401:
             raise DeployedCrewError(f"{what}: 401 - check the bearer token", kickoff_id)
         if resp.status_code >= 400:
             raise DeployedCrewError(
-                f"{what}: HTTP {resp.status_code}: {resp.text[:500]}", kickoff_id, resp.text
+                f"{what}: HTTP {resp.status_code}: {resp.text[:500]}",
+                kickoff_id,
+                resp.text,
             )
         return resp.json()
 
@@ -151,7 +172,9 @@ class DeployedCrew:
                 raise MissingInputsError(f"missing required inputs: {missing}")
         # The documented schema types every input value as a string (crews).
         if stringify:
-            inputs = {k: v if isinstance(v, str) else json.dumps(v) for k, v in inputs.items()}
+            inputs = {
+                k: v if isinstance(v, str) else json.dumps(v) for k, v in inputs.items()
+            }
         body = {"inputs": inputs, **top_level}
         resp = self._request("POST", "/kickoff", json=body, retry_on_timeout=False)
         data = self._json_or_raise(resp, "POST /kickoff")
@@ -163,7 +186,11 @@ class DeployedCrew:
             return {"state": "not_found"}
         if resp.status_code >= 500:
             # Reported by wait(), which tolerates a few in a row before giving up.
-            return {"state": "server_error", "http_status": resp.status_code, "body": resp.text[:300]}
+            return {
+                "state": "server_error",
+                "http_status": resp.status_code,
+                "body": resp.text[:300],
+            }
         return self._json_or_raise(resp, "GET /status", kickoff_id)
 
     @staticmethod
@@ -203,26 +230,43 @@ class DeployedCrew:
             if state in SUCCESS:
                 return payload
             if state in FAILURE:
-                err = payload.get("error") or payload.get("status") or payload.get("result")
-                raise RunFailed(f"run {kickoff_id} ended {state}: {err}", kickoff_id, payload)
+                err = (
+                    payload.get("error")
+                    or payload.get("status")
+                    or payload.get("result")
+                )
+                raise RunFailed(
+                    f"run {kickoff_id} ended {state}: {err}", kickoff_id, payload
+                )
             if state in PAUSED:
-                raise RunPaused(f"run {kickoff_id} is waiting for human feedback", kickoff_id, payload)
+                raise RunPaused(
+                    f"run {kickoff_id} is waiting for human feedback",
+                    kickoff_id,
+                    payload,
+                )
             if state == "not_found":
                 not_found += 1
                 if not_found > not_found_grace:
                     raise DeployedCrewError(
                         f"kickoff_id {kickoff_id} not found (wrong deployment URL, or a crew "
-                        "waiting for human input)", kickoff_id, payload)
+                        "waiting for human input)",
+                        kickoff_id,
+                        payload,
+                    )
             server_errors = server_errors + 1 if state == "server_error" else 0
             if server_errors > server_error_grace:
                 raise DeployedCrewError(
                     f"GET /status/{kickoff_id} keeps returning HTTP {payload.get('http_status')}; "
-                    "the run itself may have failed - check the deployment's logs", kickoff_id, payload)
+                    "the run itself may have failed - check the deployment's logs",
+                    kickoff_id,
+                    payload,
+                )
             remaining = deadline - time.monotonic()
             if remaining <= 0:
                 raise RunTimeout(
                     f"run {kickoff_id} not finished after {deadline_s}s (last state {state!r})",
-                    kickoff_id, payload,
+                    kickoff_id,
+                    payload,
                 )
             time.sleep(min(interval * random.uniform(0.8, 1.2), remaining))
             interval = min(interval * 1.5, max_interval)
@@ -245,7 +289,9 @@ class DeployedCrew:
 
 
 if __name__ == "__main__":
-    crew = DeployedCrew(os.environ["CREWAI_DEPLOYMENT_URL"], os.environ["CREWAI_DEPLOYMENT_TOKEN"])
+    crew = DeployedCrew(
+        os.environ["CREWAI_DEPLOYMENT_URL"], os.environ["CREWAI_DEPLOYMENT_TOKEN"]
+    )
     try:
         print(crew.run({"topic": "AI agents", "audience": "engineers"}))
     except RunTimeout as e:
@@ -263,15 +309,17 @@ if __name__ == "__main__":
 import os
 from deployed_crew_client import DeployedCrew, RunFailed, RunPaused, RunTimeout
 
-crew = DeployedCrew(os.environ["CREWAI_DEPLOYMENT_URL"], os.environ["CREWAI_DEPLOYMENT_TOKEN"])
+crew = DeployedCrew(
+    os.environ["CREWAI_DEPLOYMENT_URL"], os.environ["CREWAI_DEPLOYMENT_TOKEN"]
+)
 try:
-    required = crew.get_inputs()                       # e.g. ["topic", "audience"]
+    required = crew.get_inputs()  # e.g. ["topic", "audience"]
     kickoff_id = crew.kickoff(
         {"topic": "AI agents", "audience": "engineers"},
         required=required,
-        meta={"requestId": "req-123"},                 # sits beside "inputs"
+        meta={"requestId": "req-123"},  # sits beside "inputs"
     )
-    save_kickoff_id("req-123", kickoff_id)             # your storage: do this before polling
+    save_kickoff_id("req-123", kickoff_id)  # your storage: do this before polling
     payload = crew.wait(kickoff_id, deadline_s=900)
     print(DeployedCrew.result_of(payload))
 except RunFailed as e:

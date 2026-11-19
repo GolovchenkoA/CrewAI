@@ -21,7 +21,9 @@ from crewai.project import CrewBase, agent, before_kickoff, crew, task
 class ReportCrew:
     @before_kickoff
     def add_customer(self, inputs):
-        self.tasks[0].description += f" The customer is {inputs['customer']}."  # do not do this
+        self.tasks[
+            0
+        ].description += f" The customer is {inputs['customer']}."  # do not do this
         return inputs
 
     @agent
@@ -30,7 +32,11 @@ class ReportCrew:
 
     @task
     def write(self) -> Task:
-        return Task(description="Write about {topic}.", expected_output="A report.", agent=self.writer())
+        return Task(
+            description="Write about {topic}.",
+            expected_output="A report.",
+            agent=self.writer(),
+        )
 
     @crew
     def crew(self) -> Crew:
@@ -99,6 +105,8 @@ class LookupTool(BaseTool):
     def _run(self, query: str) -> str:
         self.seen.append(query)
         return f"results for {query} (seen so far: {self.seen})"
+
+
 # Observed with kickoff_for_each over two inputs: the second run's tool output
 # listed the first run's query.
 ```
@@ -112,7 +120,9 @@ from crewai import Agent, Crew, Task
 from crewai.project import CrewBase, after_kickoff, agent, before_kickoff, crew, task
 from crewai.tools import BaseTool
 
-CURRENT_CUSTOMER: contextvars.ContextVar[str | None] = contextvars.ContextVar("current_customer", default=None)
+CURRENT_CUSTOMER: contextvars.ContextVar[str | None] = contextvars.ContextVar(
+    "current_customer", default=None
+)
 
 
 class CustomerRecordTool(BaseTool):
@@ -140,13 +150,20 @@ class SupportCrew:
 
     @agent
     def helper(self) -> Agent:
-        return Agent(role="Support agent", goal="Help {customer}", backstory="Careful.",
-                     tools=[CustomerRecordTool()])
+        return Agent(
+            role="Support agent",
+            goal="Help {customer}",
+            backstory="Careful.",
+            tools=[CustomerRecordTool()],
+        )
 
     @task
     def answer(self) -> Task:
-        return Task(description="Answer {customer}'s question: {question}",
-                    expected_output="An answer.", agent=self.helper())
+        return Task(
+            description="Answer {customer}'s question: {question}",
+            expected_output="An answer.",
+            agent=self.helper(),
+        )
 
     @crew
     def crew(self) -> Crew:
@@ -175,13 +192,23 @@ from crewai import Agent, Crew, Task
 
 def build_research_crew() -> Crew:
     researcher = Agent(role="Researcher", goal="Research {topic}", backstory="Careful.")
-    collect = Task(description="Collect facts about {topic}.", expected_output="Facts.", agent=researcher)
-    summarise = Task(description="Summarise the facts about {topic}.", expected_output="A summary.", agent=researcher)
+    collect = Task(
+        description="Collect facts about {topic}.",
+        expected_output="Facts.",
+        agent=researcher,
+    )
+    summarise = Task(
+        description="Summarise the facts about {topic}.",
+        expected_output="A summary.",
+        agent=researcher,
+    )
     return Crew(agents=[researcher], tasks=[collect, summarise])
 
 
 async def handle_request(topic: str) -> str:
-    result = await build_research_crew().akickoff(inputs={"topic": topic})  # fresh objects per request
+    result = await build_research_crew().akickoff(
+        inputs={"topic": topic}
+    )  # fresh objects per request
     return result.raw
 ```
 
@@ -214,8 +241,14 @@ from crewai import Agent, Crew, Task
 
 def build(llm) -> Crew:
     a = Agent(role="Researcher", goal="Research {topic}", backstory="Careful.", llm=llm)
-    t1 = Task(description="Collect facts about {topic}.", expected_output="Facts.", agent=a)
-    t2 = Task(description="Summarise the facts about {topic}.", expected_output="A summary.", agent=a)
+    t1 = Task(
+        description="Collect facts about {topic}.", expected_output="Facts.", agent=a
+    )
+    t2 = Task(
+        description="Summarise the facts about {topic}.",
+        expected_output="A summary.",
+        agent=a,
+    )
     return Crew(agents=[a], tasks=[t1, t2])
 
 

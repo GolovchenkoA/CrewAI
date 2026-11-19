@@ -9,11 +9,13 @@ What `crewai_tools` 1.15.22-1.15.23 actually exports, the names models invent, a
 ```python
 import crewai_tools
 
+
 def has_tool(name: str) -> bool:
     return hasattr(crewai_tools, name)
 
+
 for name in ["SerperDevTool", "CodeInterpreterTool", "BedrockKBRetrieverTool"]:
-    print(name, has_tool(name))   # True / False / True
+    print(name, has_tool(name))  # True / False / True
 ```
 
 Run `crewai version --tools` to see the installed crewai-tools version. Every name below was checked by import against crewai-tools 1.15.22-1.15.23.

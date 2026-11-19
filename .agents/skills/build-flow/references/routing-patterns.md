@@ -70,13 +70,13 @@ class Nested(Flow):
     def c(self):
         return "c"
 
-    @listen(and_(a, or_(b, c)))       # a, plus either b or c
+    @listen(and_(a, or_(b, c)))  # a, plus either b or c
     def joined(self, value):
         seen.append("joined")
 
 
 Nested().kickoff()
-print(seen)   # ['joined'] - once
+print(seen)  # ['joined'] - once
 ```
 
 ---
@@ -125,7 +125,7 @@ class OrderFlow(Flow[OrderState]):
 
 f = OrderFlow()
 f.kickoff(inputs={"amount": 5000, "country": "DE"})
-print(f.state.path)   # ['receive', 'export']
+print(f.state.path)  # ['receive', 'export']
 ```
 
 ---
@@ -153,10 +153,17 @@ class LeadState(BaseModel):
 
 
 def research_crew() -> Crew:
-    researcher = Agent(role="Lead Researcher", goal="Profile {company}",
-                       backstory="You research B2B leads.", llm="openai/gpt-4o-mini")
-    task = Task(description="Profile {company}, which has {employees} employees.",
-                expected_output="Three bullet points.", agent=researcher)
+    researcher = Agent(
+        role="Lead Researcher",
+        goal="Profile {company}",
+        backstory="You research B2B leads.",
+        llm="openai/gpt-4o-mini",
+    )
+    task = Task(
+        description="Profile {company}, which has {employees} employees.",
+        expected_output="Three bullet points.",
+        agent=researcher,
+    )
     return Crew(agents=[researcher], tasks=[task])
 
 
@@ -166,7 +173,8 @@ class LeadFlow(Flow[LeadState]):
     def enrich(self):
         self.state.runs += 1
         out = research_crew().kickoff(
-            inputs={"company": self.state.company, "employees": self.state.employees})
+            inputs={"company": self.state.company, "employees": self.state.employees}
+        )
         self.state.summary = out.raw
 
     @router(enrich)
@@ -183,8 +191,12 @@ class LeadFlow(Flow[LeadState]):
 
     @listen(or_(assign_account_exec, assign_nurture))
     def record(self):
-        return {"company": self.state.company, "tier": self.state.tier,
-                "owner": self.state.owner, "runs": self.state.runs}
+        return {
+            "company": self.state.company,
+            "tier": self.state.tier,
+            "owner": self.state.owner,
+            "runs": self.state.runs,
+        }
 
 
 first = LeadFlow()
@@ -192,7 +204,7 @@ print(first.kickoff(inputs={"company": "acme", "employees": 5000}))
 # {'company': 'acme', 'tier': 'enterprise', 'owner': 'account-exec', 'runs': 1}
 
 again = LeadFlow()
-print(again.kickoff(restore_from_state_id=first.state.id))   # runs == 2, new state.id
+print(again.kickoff(restore_from_state_id=first.state.id))  # runs == 2, new state.id
 ```
 
 In a scaffolded project, put this in `src/<pkg>/main.py` and keep the entry point returning `None`:

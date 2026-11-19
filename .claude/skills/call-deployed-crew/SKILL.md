@@ -66,9 +66,19 @@ Locally, `Crew.fetch_inputs()` is crewai's own scan of the same fields:
 ```python
 from crewai import Agent, Crew, Task
 
-agent = Agent(role="{topic} researcher", goal="Explain {topic}", backstory="Writes for {audience}.")
-task = Task(description="Research {topic} for {audience}.", expected_output="A summary of {topic}.", agent=agent)
-print(sorted(Crew(agents=[agent], tasks=[task]).fetch_inputs()))  # ['audience', 'topic']
+agent = Agent(
+    role="{topic} researcher",
+    goal="Explain {topic}",
+    backstory="Writes for {audience}.",
+)
+task = Task(
+    description="Research {topic} for {audience}.",
+    expected_output="A summary of {topic}.",
+    agent=agent,
+)
+print(
+    sorted(Crew(agents=[agent], tasks=[task]).fetch_inputs())
+)  # ['audience', 'topic']
 ```
 
 What crewai does with the inputs it receives (verified locally on 1.15.22-1.15.23):
@@ -185,7 +195,9 @@ The full client (httpx, about 200 lines) is in [references/python-client.md](ref
 import os
 from deployed_crew_client import DeployedCrew, RunTimeout
 
-crew = DeployedCrew(os.environ["CREWAI_DEPLOYMENT_URL"], os.environ["CREWAI_DEPLOYMENT_TOKEN"])
+crew = DeployedCrew(
+    os.environ["CREWAI_DEPLOYMENT_URL"], os.environ["CREWAI_DEPLOYMENT_TOKEN"]
+)
 try:
     result = crew.run({"topic": "AI agents", "audience": "engineers"}, deadline_s=900)
 except RunTimeout as e:

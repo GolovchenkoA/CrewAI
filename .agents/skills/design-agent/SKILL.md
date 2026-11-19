@@ -38,14 +38,18 @@ Exact API forms (imports, defaults, provider extras, structured output) are in t
 ❌ Three agents for what is one researcher's job:
 ```python
 source_finder = Agent(role="Finds URLs via Firecrawl search", tools=[firecrawl_search])
-scraper       = Agent(role="Scrapes URLs via Firecrawl scrape", tools=[firecrawl_scrape])
-writer        = Agent(role="Writes the report")  # plus goal, backstory, llm
+scraper = Agent(role="Scrapes URLs via Firecrawl scrape", tools=[firecrawl_scrape])
+writer = Agent(role="Writes the report")  # plus goal, backstory, llm
 ```
 
 ✅ One researcher does the gathering loop; one writer synthesizes — two agents because the personas and LLMs genuinely differ:
 ```python
-researcher = Agent(role="Web Researcher", tools=[firecrawl_search, firecrawl_scrape], llm="anthropic/claude-haiku-4-5")
-writer     = Agent(role="Technical Report Writer",                                    llm="anthropic/claude-sonnet-4-6")
+researcher = Agent(
+    role="Web Researcher",
+    tools=[firecrawl_search, firecrawl_scrape],
+    llm="anthropic/claude-haiku-4-5",
+)
+writer = Agent(role="Technical Report Writer", llm="anthropic/claude-sonnet-4-6")
 ```
 
 ❌ A `Summarizer` agent plus a `Slack Sender` agent (`apps=["slack"]`) to summarize a string and DM it.
@@ -60,7 +64,9 @@ Use `Agent.kickoff()` directly inside a Flow method - no `Crew`, no `Task` cerem
 ```python
 @listen(previous_step)
 def my_step(self):
-    agent = Agent(role="…", goal="…", backstory="…", tools=[...], llm="anthropic/claude-haiku-4-5")
+    agent = Agent(
+        role="…", goal="…", backstory="…", tools=[...], llm="anthropic/claude-haiku-4-5"
+    )
     result = agent.kickoff(
         f"Use this prior step's output: {self.state.prior_field}",
         response_format=MyPydanticModel,  # optional
@@ -122,17 +128,19 @@ backstory: >
 
 ```python
 Agent(
-    role="...", goal="...", backstory="...",   # Required
-    llm="anthropic/claude-haiku-4-5",          # See LLM Selection
-    tools=[...],                               # Tool instances
-    max_iter=25,             # Max reasoning iterations per task (default: 25)
+    role="...",
+    goal="...",
+    backstory="...",  # Required
+    llm="anthropic/claude-haiku-4-5",  # See LLM Selection
+    tools=[...],  # Tool instances
+    max_iter=25,  # Max reasoning iterations per task (default: 25)
     max_execution_time=300,  # Seconds, crew tasks only (default: None - no limit)
-    max_rpm=10,              # Max LLM calls per minute for this agent (default: None)
-    max_retry_limit=2,       # Retries when task execution errors (default: 2)
+    max_rpm=10,  # Max LLM calls per minute for this agent (default: None)
+    max_retry_limit=2,  # Retries when task execution errors (default: 2)
     allow_delegation=False,  # Default: False — agent works alone
     respect_context_window=True,  # Summarize and continue on overflow (default: True)
-    inject_date=False,       # Put today's date in the prompt (default: False; format via date_format)
-    verbose=False,           # Detailed execution logs (default: False)
+    inject_date=False,  # Put today's date in the prompt (default: False; format via date_format)
+    verbose=False,  # Detailed execution logs (default: False)
 )
 ```
 
@@ -183,7 +191,10 @@ from crewai import Agent
 from crewai.agent.planning_config import PlanningConfig
 
 agent = Agent(
-    role="…", goal="…", backstory="…", tools=[...],
+    role="…",
+    goal="…",
+    backstory="…",
+    tools=[...],
     planning_config=PlanningConfig(reasoning_effort="medium"),  # most common
 )
 ```
@@ -199,14 +210,16 @@ To disable planning, omit `planning_config`. `planning=True` alone is shorthand 
 ```python
 PlanningConfig(
     reasoning_effort="medium",
-    observe_steps=None,      # None = LLM observation for medium/high, heuristic for low
-    max_steps=20,            # cap on planned steps
-    max_replans=3,           # full re-plans before finalizing
-    max_attempts=None,       # refinement attempts during plan generation
+    observe_steps=None,  # None = LLM observation for medium/high, heuristic for low
+    max_steps=20,  # cap on planned steps
+    max_replans=3,  # full re-plans before finalizing
+    max_attempts=None,  # refinement attempts during plan generation
     max_step_iterations=15,  # LLM turns per step
-    step_timeout=None,       # wall-clock seconds per step
-    system_prompt=None, plan_prompt=None, refine_prompt=None,  # custom prompts
-    llm=None,                # separate (cheaper) LLM for planning; else agent.llm
+    step_timeout=None,  # wall-clock seconds per step
+    system_prompt=None,
+    plan_prompt=None,
+    refine_prompt=None,  # custom prompts
+    llm=None,  # separate (cheaper) LLM for planning; else agent.llm
 )
 ```
 
@@ -223,13 +236,17 @@ PlanningConfig(
 ```python
 from typing import Any
 
+
 def require_uppercase(result) -> tuple[bool, Any]:
     if result.raw != result.raw.upper():
         return (False, "Rewrite the whole answer in UPPERCASE letters only.")
     return (True, result.raw)
 
-agent = Agent(..., guardrail=require_uppercase, guardrail_max_retries=3)  # default retries: 3
-result = agent.kickoff("...")   # the agent guardrail runs here
+
+agent = Agent(
+    ..., guardrail=require_uppercase, guardrail_max_retries=3
+)  # default retries: 3
+result = agent.kickoff("...")  # the agent guardrail runs here
 ```
 
 A guardrail can also be a string, which is checked by an extra LLM call. Agent guardrails have two limits on 1.15.23, both verified with a real LLM:
@@ -245,8 +262,12 @@ from crewai.knowledge.source.text_file_knowledge_source import TextFileKnowledge
 
 Agent(
     ...,
-    knowledge_sources=[TextFileKnowledgeSource(file_paths=["company_handbook.txt"])],  # read from ./knowledge/
-    embedder={"provider": "onnx"},   # local, no API key; omit it to use OpenAI embeddings
+    knowledge_sources=[
+        TextFileKnowledgeSource(file_paths=["company_handbook.txt"])
+    ],  # read from ./knowledge/
+    embedder={
+        "provider": "onnx"
+    },  # local, no API key; omit it to use OpenAI embeddings
 )
 ```
 
@@ -314,18 +335,24 @@ researcher = Agent(
 )
 
 result = researcher.kickoff("What are the latest developments in quantum computing?")
-print(result.raw)             # str — the agent's full response
-print(result.usage_metrics)   # dict: total_tokens, prompt_tokens, completion_tokens, ...
+print(result.raw)  # str — the agent's full response
+print(result.usage_metrics)  # dict: total_tokens, prompt_tokens, completion_tokens, ...
+
 
 class ResearchFindings(BaseModel):
     key_trends: list[str]
     sources: list[str]
     confidence: float
 
-result = researcher.kickoff("Research the latest AI agent frameworks", response_format=ResearchFindings)
+
+result = researcher.kickoff(
+    "Research the latest AI agent frameworks", response_format=ResearchFindings
+)
 print(result.pydantic.key_trends, result.pydantic.confidence)
 
-result = await researcher.kickoff_async("...", response_format=ResearchFindings)  # async variant
+result = await researcher.kickoff_async(
+    "...", response_format=ResearchFindings
+)  # async variant
 ```
 
 > **Note:** `Agent.kickoff()` returns `LiteAgentOutput` - access structured output via `result.pydantic`. This differs from `llm.call(messages, response_model=Model)`, which returns the Pydantic object directly. `Agent.kickoff(..., response_model=...)` is a `TypeError`.
@@ -368,7 +395,7 @@ Crew(
     agents=[researcher, writer, editor],
     tasks=[research_task, writing_task, editing_task],
     process=Process.hierarchical,
-    manager_llm="anthropic/claude-haiku-4-5",   # or manager_agent=...; one is required
+    manager_llm="anthropic/claude-haiku-4-5",  # or manager_agent=...; one is required
 )
 ```
 

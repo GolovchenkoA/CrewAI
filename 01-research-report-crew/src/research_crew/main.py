@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Entry points: run (single topic or batch), train, replay, test."""
+
 import argparse
 import os
 import re
@@ -38,7 +39,9 @@ def run() -> None:
     parser = argparse.ArgumentParser(description="Research & report crew")
     parser.add_argument("--topic", help="Single topic (default: TOPIC from .env)")
     parser.add_argument("--topics", help="Several topics separated by ';' (batch run)")
-    parser.add_argument("--urls", help="Comma-separated pages to scrape (default: SOURCE_URLS)")
+    parser.add_argument(
+        "--urls", help="Comma-separated pages to scrape (default: SOURCE_URLS)"
+    )
     args = parser.parse_args()
 
     if args.topics:
@@ -68,7 +71,9 @@ def train() -> None:
     """Usage: research_crew_train <iterations> <file.pkl>"""
     try:
         ResearchCrew().crew().train(
-            n_iterations=int(sys.argv[1]), filename=sys.argv[2], inputs=_default_inputs()
+            n_iterations=int(sys.argv[1]),
+            filename=sys.argv[2],
+            inputs=_default_inputs(),
         )
     except Exception as e:
         raise Exception(f"An error occurred while training the crew: {e}")
@@ -86,7 +91,9 @@ def test() -> None:
     """Usage: research_crew_test <iterations> <eval_llm>"""
     try:
         ResearchCrew().crew().test(
-            n_iterations=int(sys.argv[1]), eval_llm=sys.argv[2], inputs=_default_inputs()
+            n_iterations=int(sys.argv[1]),
+            eval_llm=sys.argv[2],
+            inputs=_default_inputs(),
         )
     except Exception as e:
         raise Exception(f"An error occurred while testing the crew: {e}")
