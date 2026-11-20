@@ -13,8 +13,7 @@ def make_llm(provider: str | None = None, temperature: float = 0.2) -> LLM:
     provider = (provider or os.getenv("LLM_PROVIDER") or "local").strip().lower()
     if provider == "claude":
         return LLM(
-            model=os.getenv("CLAUDE_MODEL", "anthropic/claude-sonnet-5-5"),
-            temperature=temperature,
+            model=os.getenv("CLAUDE_MODEL", "anthropic/claude-sonnet-5-5")
         )
     if provider == "local":
         return LLM(

@@ -72,3 +72,23 @@ def test_calls_outside_a_crew_are_labelled():
 def test_empty_report():
     with crewai_event_bus.scoped_handlers():
         assert "no LLM calls" in UsageTracker().report()
+
+
+def test_anthropic_style_usage_keys_are_counted():
+    """Anthropic reports input_tokens / output_tokens, not prompt_tokens / completion_tokens."""
+    from crewai.events.types.llm_events import LLMCallCompletedEvent, LLMCallType
+
+    with crewai_event_bus.scoped_handlers():
+        tracker = UsageTracker()
+        crewai_event_bus.emit(
+            None,
+            LLMCallCompletedEvent(
+                response="ok",
+                call_type=LLMCallType.LLM_CALL,
+                call_id="c1",
+                agent_role="Claude Agent",
+                usage={"input_tokens": 120, "output_tokens": 30, "total_tokens": 150},
+            ),
+        )
+        usage = tracker.snapshot()[(NO_CREW, "Claude Agent")]
+        assert (usage.prompt_tokens, usage.completion_tokens) == (120, 30)

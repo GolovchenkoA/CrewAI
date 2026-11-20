@@ -21,6 +21,7 @@ import threading
 from collections import defaultdict
 from dataclasses import dataclass
 
+from crewai.types.usage_metrics import UsageMetrics
 from crewai.events import (
     BaseEventListener,
     CrewKickoffCompletedEvent,
@@ -74,9 +75,11 @@ class UsageTracker(BaseEventListener):
 
         @crewai_event_bus.on(LLMCallCompletedEvent)
         def on_llm_call(source, event) -> None:  # noqa: ANN001
-            usage = event.usage or {}
-            prompt = int(usage.get("prompt_tokens") or 0)
-            completion = int(usage.get("completion_tokens") or 0)
+            # providers name the keys differently (Anthropic: input_tokens / output_tokens,
+            # OpenAI/Ollama: prompt_tokens / completion_tokens): let CrewAI normalise them
+            metrics = UsageMetrics.from_provider_dict(event.usage)
+            prompt = metrics.prompt_tokens if metrics else 0
+            completion = metrics.completion_tokens if metrics else 0
             with self._lock:
                 crew = self._crew_stack[-1] if self._crew_stack else NO_CREW
                 agent = event.agent_role or NO_AGENT
