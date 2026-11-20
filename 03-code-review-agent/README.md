@@ -1,5 +1,7 @@
 # 03 - Production-Grade Code Review Agent
 
+![How a pull request gets reviewed: callers, FastAPI, the reviewer agents and the lead reviewer](app.svg)
+
 ## 1. What the project does
 
 A crew that reviews pull requests and posts a summary comment. A FastAPI service receives GitHub `pull_request` webhooks (or you can feed it a local `.diff` file), then three agents review in parallel:
@@ -106,13 +108,53 @@ uv run --package code-review-agent pytest 03-code-review-agent/tests     # from 
 
 ### Docker
 
-The image installs from the workspace lock file, so the Docker build context is the **repository root**:
+The image installs from the workspace lock file, so the Docker build context is the **repository root**. Run all commands from there; the service listens on http://localhost:8080.
 
-```bash
-docker compose -f 03-code-review-agent/docker-compose.yml up --build    # from the repository root; http://localhost:8080
+The Anthropic key is **not** stored in `.env`, the image or the compose file. Compose passes `ANTHROPIC_API_KEY` through from the shell that runs it, so it must exist as an environment variable and `ANTHROPIC_API_KEY=` stays empty in `.env`.
+
+**Windows (PowerShell)**: with `ANTHROPIC_API_KEY` set as a Windows user or system environment variable (System Properties > Environment Variables, or `setx ANTHROPIC_API_KEY "sk-ant-..."`), no extra step is needed. Open a new terminal after setting it, then:
+```powershell
+docker compose -f 03-code-review-agent/docker-compose.yml up --build
 ```
-Compose reads `03-code-review-agent/.env`. For a local LLM from the container `OLLAMA_BASE_URL` defaults to `http://host.docker.internal:11434` (Windows/macOS; on Linux run Ollama on the Docker network). Not built or run yet in this repository; the compose file is validated with `docker compose config`.
+
+**Linux / macOS**
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+docker compose -f 03-code-review-agent/docker-compose.yml up --build
+```
+
+Notes:
+- A terminal only sees variables that existed when it was opened. After setting or changing the key, open a new terminal (and restart PyCharm or Docker Desktop if you start compose from there), then recreate the container: `docker compose -f 03-code-review-agent/docker-compose.yml up -d --force-recreate` (a plain restart does not reload it).
+- If the variable is not set, the container still starts; a review then fails with `Could not resolve authentication method` (HTTP 500). Not needed with `LLM_PROVIDER=local`.
+- Everything else comes from `03-code-review-agent/.env`.
+- Local LLM: Ollama runs on the host, not in the image. `OLLAMA_BASE_URL` defaults to `http://host.docker.internal:11434` (Windows/macOS; on Linux run Ollama on the Docker network).
 
 ### Optional observability
 
-Set `OTEL_EXPORTER_OTLP_ENDPOINT` in `.env` (any OTLP/HTTP backend, including Langfuse's OTLP endpoint; add its auth with the standard `OTEL_EXPORTER_OTLP_HEADERS`). Each review then produces one `review` span with title, file, chunk and finding counts. Leave it empty to disable.
+Set `OTEL_EXPORTER_OTLP_ENDPOINT` in `.env` (any OTLP/HTTP backend, including Langfuse's OTLP endpoint; add its auth with the standard `OTEL_EXPORTER_OTLP_HEADERS`). Each review then produces one `review` span with title, file, chunk and finding counts. Leave it empty to disable. The trace has only this one span per review (no per-agent or LLM-call spans).
+
+Tracing never breaks a review. If the backend is not running, the span export fails in the background after a 2 second timeout and only a warning is logged; if the tracing setup itself fails, tracing is switched off with one warning.
+
+#### View traces locally with Jaeger
+
+Jaeger (an OTLP receiver and UI in one container) is optional and only starts on demand. Port `4318` receives the spans (OTLP/HTTP) and `16686` serves the UI.
+
+**Service running on your machine:** start Jaeger alone, then point the service at it.
+
+```bash
+docker run --rm -p 16686:16686 -p 4318:4318 jaegertracing/all-in-one:latest
+```
+
+1. Put `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318` in `03-code-review-agent/.env`.
+2. Start the service or run a review (see above).
+3. Open http://localhost:16686, choose the service `code-review-agent` and click **Find Traces**.
+
+**Service running with docker compose:** Jaeger is in the `tracing` profile of the compose file, so a plain `up` does not start it. Set `TRACING_ENDPOINT=http://jaeger:4318` in `.env`, then add the profile:
+
+```bash
+docker compose -f 03-code-review-agent/docker-compose.yml --profile tracing up --build
+```
+
+Without `TRACING_ENDPOINT` the container runs with tracing off (compose ignores `OTEL_EXPORTER_OTLP_ENDPOINT` from `.env`, because `localhost` would be the container itself).
+
+Jaeger keeps traces in memory, so they are lost when the container stops.

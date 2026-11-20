@@ -23,28 +23,6 @@ from code_review.tools import DiffSummaryTool, RepoFileTool
 CONFIG_DIR = Path(__file__).parent / "config"
 
 
-def _config(name: str) -> dict:
-    return yaml.safe_load((CONFIG_DIR / name).read_text(encoding="utf-8"))
-
-
-def _agent(key: str, tools: list | None = None) -> Agent:
-    return Agent(
-        config=_config("agents.yaml")[key],
-        llm=llm_factory.make_llm(),
-        tools=tools or [],
-        verbose=llm_factory.env_bool("VERBOSE", False),
-        # retries, rate limit and timeouts
-        max_rpm=int(os.getenv("MAX_RPM", "30")),
-        max_retry_limit=int(os.getenv("MAX_RETRY_LIMIT", "2")),
-        max_execution_time=int(os.getenv("AGENT_TIMEOUT", "900")),
-        allow_delegation=False,
-    )
-
-
-def _task(key: str, agent: Agent, **kwargs: Any) -> Task:
-    return Task(config=_config("tasks.yaml")[key], agent=agent, **kwargs)
-
-
 def reviewers_crew(full_diff: str, repo_root: Path | None = None) -> Crew:
     """Three reviewers. `full_diff` is the whole PR (for the changed-files tool), not the chunk."""
     repo_tools = [RepoFileTool(root=repo_root)] if repo_root else []
@@ -79,6 +57,23 @@ def reviewers_crew(full_diff: str, repo_root: Path | None = None) -> Crew:
     )
 
 
+def lead_crew(findings: list[Finding]) -> Crew:
+    lead = _agent("lead_reviewer")
+    task = _task(
+        "lead_task",
+        lead,
+        guardrail=references_every_finding(findings),
+        guardrail_max_retries=int(os.getenv("GUARDRAIL_RETRIES", "2")),
+    )
+    return Crew(
+        name="lead_crew",
+        agents=[lead],
+        tasks=[task],
+        process=Process.sequential,
+        verbose=llm_factory.env_bool("VERBOSE", False),
+    )
+
+
 def references_every_finding(findings: list[Finding]):
     """Guardrail factory: the comment must contain `file:line` for every finding."""
 
@@ -99,18 +94,26 @@ def references_every_finding(findings: list[Finding]):
     return guardrail
 
 
-def lead_crew(findings: list[Finding]) -> Crew:
-    lead = _agent("lead_reviewer")
-    task = _task(
-        "lead_task",
-        lead,
-        guardrail=references_every_finding(findings),
-        guardrail_max_retries=int(os.getenv("GUARDRAIL_RETRIES", "2")),
-    )
-    return Crew(
-        name="lead_crew",
-        agents=[lead],
-        tasks=[task],
-        process=Process.sequential,
+# --- helpers used by the crews above (resolved at call time, so they may be defined last) ---
+
+
+def _config(name: str) -> dict:
+    return yaml.safe_load((CONFIG_DIR / name).read_text(encoding="utf-8"))
+
+
+def _agent(key: str, tools: list | None = None) -> Agent:
+    return Agent(
+        config=_config("agents.yaml")[key],
+        llm=llm_factory.make_llm(),
+        tools=tools or [],
         verbose=llm_factory.env_bool("VERBOSE", False),
+        # retries, rate limit and timeouts
+        max_rpm=int(os.getenv("MAX_RPM", "30")),
+        max_retry_limit=int(os.getenv("MAX_RETRY_LIMIT", "2")),
+        max_execution_time=int(os.getenv("AGENT_TIMEOUT", "900")),
+        allow_delegation=False,
     )
+
+
+def _task(key: str, agent: Agent, **kwargs: Any) -> Task:
+    return Task(config=_config("tasks.yaml")[key], agent=agent, **kwargs)

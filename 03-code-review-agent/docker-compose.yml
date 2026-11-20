@@ -9,8 +9,23 @@ services:
     env_file:
       - .env
     environment:
+      # no value: passed through from the shell that runs `docker compose`, never stored in a file.
+      # Takes precedence over ANTHROPIC_API_KEY in .env (keep that one empty)
+      ANTHROPIC_API_KEY:
       # a local LLM on the host machine (Windows/macOS); on Linux run Ollama on the Docker network instead
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      # tracing is off unless TRACING_ENDPOINT is set (overrides OTEL_EXPORTER_OTLP_ENDPOINT from .env,
+      # which would point at the container itself). With the jaeger profile: http://jaeger:4318
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${TRACING_ENDPOINT:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  # on demand only:  docker compose -f 03-code-review-agent/docker-compose.yml --profile tracing up
+  jaeger:
+    profiles: ["tracing"]
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"                  # UI
+      - "4318:4318"                    # OTLP/HTTP receiver
     restart: unless-stopped

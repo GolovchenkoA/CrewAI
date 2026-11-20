@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 810" width="1040" height="810" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+  <title id="t">Code review agent: request flow</title>
+  <desc id="d">GitHub and REST clients call a FastAPI service. It runs the review pipeline: chunk the diff, three reviewer agents (security and style in parallel, then test coverage), merge the findings, then a lead reviewer agent writes the comment, checked by a guardrail. The comment is posted to the pull request or returned as JSON.</desc>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#44505c"/>
+    </marker>
+    <style>
+      .h   { font-size: 15px; font-weight: 700; fill: #1f2933; }
+      .b   { font-size: 13px; font-weight: 700; fill: #1f2933; }
+      .t   { font-size: 12px; fill: #1f2933; }
+      .s   { font-size: 11px; fill: #5b6672; }
+      .cap { font-size: 11px; font-weight: 700; fill: #5b6672; letter-spacing: 1px; }
+      .line  { stroke: #44505c; stroke-width: 1.8; fill: none; marker-end: url(#arr); }
+      .ret   { stroke: #44505c; stroke-width: 1.5; fill: none; stroke-dasharray: 6 4; marker-end: url(#arr); }
+    </style>
+  </defs>
+
+  <rect width="1040" height="810" fill="#ffffff"/>
+  <text x="20" y="34" font-size="20" font-weight="700" fill="#1f2933">Code review agent: how a pull request gets reviewed</text>
+
+  <!-- ===== callers ===== -->
+  <text x="20" y="114" class="cap">3 WAYS TO START A REVIEW</text>
+  <rect x="20" y="125" width="160" height="90" rx="10" fill="#eef2f7" stroke="#5b6b7f" stroke-width="1.5"/>
+  <text x="100" y="148" text-anchor="middle" class="b">1 · REST client</text>
+  <text x="100" y="168" text-anchor="middle" class="t">you already have a diff</text>
+  <text x="100" y="185" text-anchor="middle" class="t">and want JSON back</text>
+  <text x="100" y="203" text-anchor="middle" class="s">e.g. Spring Boot app, tests</text>
+
+  <rect x="20" y="255" width="160" height="100" rx="10" fill="#eef2f7" stroke="#5b6b7f" stroke-width="1.5"/>
+  <text x="100" y="279" text-anchor="middle" class="b">2 · GitHub</text>
+  <text x="100" y="299" text-anchor="middle" class="t">automatic, on every PR</text>
+  <text x="100" y="316" text-anchor="middle" class="t">opened or updated</text>
+  <text x="100" y="337" text-anchor="middle" class="s">comment lands on the PR</text>
+
+  <rect x="20" y="455" width="160" height="90" rx="10" fill="#eef2f7" stroke="#5b6b7f" stroke-width="1.5"/>
+  <text x="100" y="478" text-anchor="middle" class="b">3 · Command line</text>
+  <text x="100" y="498" text-anchor="middle" class="t">uv run code_review_run</text>
+  <text x="100" y="514" text-anchor="middle" class="t">--diff file.diff</text>
+  <text x="100" y="534" text-anchor="middle" class="s">local file, no server</text>
+  <path class="line" d="M180,495 H472 V170 H545"/>
+  <text x="326" y="487" text-anchor="middle" class="s">skips the API, calls review_diff() directly</text>
+
+  <!-- caller arrows -->
+  <path class="line" d="M180,160 H275"/>
+  <path class="ret" d="M275,188 H180"/>
+  <text x="227" y="203" text-anchor="middle" class="s">JSON</text>
+  <path class="line" d="M180,290 H275"/>
+  <text x="227" y="283" text-anchor="middle" class="s">webhook</text>
+  <path class="ret" d="M275,322 H180"/>
+  <text x="227" y="337" text-anchor="middle" class="s">202</text>
+
+  <!-- ===== FastAPI ===== -->
+  <rect x="260" y="80" width="190" height="360" rx="12" fill="#e8f6f3" stroke="#1a8f7a" stroke-width="1.8"/>
+  <text x="355" y="103" text-anchor="middle" class="h">FastAPI · api.py</text>
+
+  <rect x="275" y="135" width="160" height="70" rx="8" fill="#ffffff" stroke="#1a8f7a" stroke-width="1.5"/>
+  <text x="355" y="162" text-anchor="middle" class="b">POST /review/diff</text>
+  <text x="355" y="182" text-anchor="middle" class="t">raw diff, synchronous</text>
+
+  <rect x="275" y="245" width="160" height="120" rx="8" fill="#ffffff" stroke="#1a8f7a" stroke-width="1.5"/>
+  <text x="355" y="270" text-anchor="middle" class="b">POST /review</text>
+  <text x="355" y="291" text-anchor="middle" class="t">GitHub webhook</text>
+  <text x="355" y="308" text-anchor="middle" class="t">HMAC check, replies 202</text>
+  <text x="355" y="325" text-anchor="middle" class="t">reviews in background</text>
+  <text x="355" y="342" text-anchor="middle" class="t">fetches the PR diff</text>
+
+  <text x="355" y="420" text-anchor="middle" class="s">GET /health</text>
+
+  <!-- endpoint to pipeline -->
+  <path class="line" d="M435,170 H545"/>
+  <path class="line" d="M435,305 H472 V170 H545"/>
+
+  <!-- ===== pipeline ===== -->
+  <rect x="500" y="80" width="520" height="655" rx="14" fill="#fafbfc" stroke="#9aa5b1" stroke-width="1.5" stroke-dasharray="7 5"/>
+  <text x="520" y="103" class="h">Review pipeline · review.py</text>
+
+  <!-- 1 chunk -->
+  <rect x="545" y="145" width="430" height="50" rx="8" fill="#f1f3f5" stroke="#6b7785" stroke-width="1.5"/>
+  <text x="760" y="166" text-anchor="middle" class="b">1 · Chunk the diff</text>
+  <text x="760" y="184" text-anchor="middle" class="t">split by MAX_DIFF_TOKENS, number the lines</text>
+  <path class="line" d="M760,195 V225"/>
+
+  <!-- 2 reviewers crew -->
+  <rect x="520" y="225" width="480" height="230" rx="12" fill="#f3effc" stroke="#7a5cc7" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="540" y="247" class="b">2 · reviewers_crew</text>
+  <text x="680" y="247" class="s">runs once per chunk</text>
+
+  <rect x="540" y="262" width="210" height="80" rx="9" fill="#ffffff" stroke="#7a5cc7" stroke-width="1.6"/>
+  <text x="645" y="286" text-anchor="middle" class="b">Security reviewer</text>
+  <text x="645" y="305" text-anchor="middle" class="t">security_task · async</text>
+  <text x="645" y="323" text-anchor="middle" class="s">injection, secrets, unsafe code</text>
+
+  <rect x="770" y="262" width="210" height="80" rx="9" fill="#ffffff" stroke="#7a5cc7" stroke-width="1.6"/>
+  <text x="875" y="286" text-anchor="middle" class="b">Style reviewer</text>
+  <text x="875" y="305" text-anchor="middle" class="t">style_task · async</text>
+  <text x="875" y="323" text-anchor="middle" class="s">naming, structure, dead code</text>
+
+  <path class="line" d="M645,342 V375"/>
+  <path class="line" d="M875,342 V375"/>
+  <text x="760" y="363" text-anchor="middle" class="s">run in parallel, both finish first</text>
+
+  <rect x="540" y="375" width="440" height="64" rx="9" fill="#ffffff" stroke="#7a5cc7" stroke-width="1.6"/>
+  <text x="760" y="398" text-anchor="middle" class="b">Test-coverage reviewer</text>
+  <text x="760" y="416" text-anchor="middle" class="t">test_task · sync</text>
+  <text x="760" y="432" text-anchor="middle" class="s">tools: list changed files, read repo file</text>
+
+  <path class="line" d="M760,455 V500"/>
+  <text x="772" y="482" class="s">ReviewFindings (structured output)</text>
+
+  <!-- 3 merge -->
+  <rect x="545" y="500" width="430" height="55" rx="8" fill="#f1f3f5" stroke="#6b7785" stroke-width="1.5"/>
+  <text x="760" y="523" text-anchor="middle" class="b">3 · Merge findings</text>
+  <text x="760" y="542" text-anchor="middle" class="t">dedupe, drop files not in the diff, sort by severity</text>
+  <path class="line" d="M760,555 V585"/>
+
+  <!-- 4 lead crew -->
+  <rect x="520" y="585" width="480" height="130" rx="12" fill="#f3effc" stroke="#7a5cc7" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="540" y="607" class="b">4 · lead_crew</text>
+  <text x="640" y="607" class="s">runs once, only if there are findings</text>
+
+  <rect x="540" y="620" width="240" height="80" rx="9" fill="#ffffff" stroke="#7a5cc7" stroke-width="1.6"/>
+  <text x="660" y="645" text-anchor="middle" class="b">Lead reviewer</text>
+  <text x="660" y="664" text-anchor="middle" class="t">lead_task · Markdown comment</text>
+  <text x="660" y="682" text-anchor="middle" class="s">no findings: LLM skipped</text>
+
+  <rect x="815" y="620" width="170" height="80" rx="9" fill="#fff6e0" stroke="#d9961a" stroke-width="1.6"/>
+  <text x="900" y="645" text-anchor="middle" class="b">Guardrail</text>
+  <text x="900" y="664" text-anchor="middle" class="t">every finding as path:line</text>
+  <text x="900" y="682" text-anchor="middle" class="s">retry, then plain comment</text>
+  <path class="line" d="M780,660 H815"/>
+
+  <!-- result back to the caller -->
+  <path class="ret" d="M520,672 H8 V305 H20"/>
+  <text x="30" y="694" class="s">1 · REST client: result returned as JSON, nothing posted</text>
+  <text x="30" y="710" class="s">2 · GitHub: comment posted on the PR</text>
+  <text x="30" y="726" class="s">3 · Command line: result printed in the terminal</text>
+
+  <!-- ===== legend ===== -->
+  <path class="line" d="M140,585 H190"/>
+  <text x="200" y="589" class="s">request / data flow</text>
+  <path class="ret" d="M140,610 H190"/>
+  <text x="200" y="614" class="s">response / result</text>
+
+  <!-- ===== LLM + side channels ===== -->
+  <rect x="500" y="752" width="520" height="40" rx="10" fill="#e9f1fd" stroke="#2f6fd0" stroke-width="1.5"/>
+  <text x="760" y="777" text-anchor="middle" class="t"><tspan font-weight="700">LLM</tspan> · every agent calls Claude or a local Ollama model (llm_factory.py)</text>
+
+  <rect x="20" y="752" width="460" height="40" rx="10" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.5"/>
+  <text x="250" y="777" text-anchor="middle" class="t"><tspan font-weight="700">Side channels</tspan> · event log, token usage, optional OpenTelemetry span</text>
+</svg>

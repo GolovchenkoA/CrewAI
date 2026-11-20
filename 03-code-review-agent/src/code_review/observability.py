@@ -2,14 +2,33 @@
 
 Enabled only when OTEL_EXPORTER_OTLP_ENDPOINT is set (for example http://localhost:4318 or a Langfuse
 OTLP endpoint); otherwise `span()` does nothing. The OpenTelemetry packages are imported lazily.
+
+Tracing must never break a review: setup errors turn tracing off with one warning, and export errors
+(backend not running) happen on a background thread with a short timeout and are logged as warnings.
 """
 
+import logging
 import os
 from collections.abc import Iterator
 from contextlib import contextmanager
 
+logger = logging.getLogger(__name__)
+
+EXPORT_TIMEOUT_SECONDS = (
+    2  # a dead backend must not stall the exporter or the shutdown flush
+)
+
 _tracer = None
 _initialised = False
+
+
+class _WarnOnly(logging.Filter):
+    """The exporter logs a failed export as an ERROR; for an optional backend a WARNING is enough."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.levelno > logging.WARNING:
+            record.levelno, record.levelname = logging.WARNING, "WARNING"
+        return True
 
 
 def _get_tracer():
@@ -17,22 +36,41 @@ def _get_tracer():
     if _initialised:
         return _tracer
     _initialised = True
-    if not os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT"):
+    endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+    if not endpoint:
         return None
-    from opentelemetry import trace
-    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-    from opentelemetry.sdk.resources import Resource
-    from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+    try:
+        from opentelemetry import trace
+        from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+            OTLPSpanExporter,
+        )
+        from opentelemetry.sdk.resources import Resource
+        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-    provider = TracerProvider(
-        resource=Resource.create({"service.name": "code-review-agent"})
-    )
-    provider.add_span_processor(
-        BatchSpanProcessor(OTLPSpanExporter())
-    )  # reads the endpoint from the env
-    trace.set_tracer_provider(provider)
-    _tracer = trace.get_tracer("code_review")
+        for name in (
+            "opentelemetry.exporter.otlp.proto.http.trace_exporter",
+            "opentelemetry.sdk.trace.export",
+        ):
+            logging.getLogger(name).addFilter(_WarnOnly())
+
+        provider = TracerProvider(
+            resource=Resource.create({"service.name": "code-review-agent"})
+        )
+        provider.add_span_processor(
+            BatchSpanProcessor(
+                OTLPSpanExporter(
+                    timeout=EXPORT_TIMEOUT_SECONDS
+                ),  # endpoint from the env
+                schedule_delay_millis=2000,
+                export_timeout_millis=EXPORT_TIMEOUT_SECONDS * 1000,
+            )
+        )
+        trace.set_tracer_provider(provider)
+        _tracer = trace.get_tracer("code_review")
+    except Exception as exc:  # noqa: BLE001 - any setup problem: run without tracing
+        logger.warning("Tracing disabled, could not set up OpenTelemetry: %s", exc)
+        _tracer = None
     return _tracer
 
 
