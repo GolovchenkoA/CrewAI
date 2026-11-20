@@ -138,3 +138,62 @@ def test_claude_call_gets_an_llm_span():
     assert len(spans) == 1
     assert spans[0].attributes["llm.token_count.prompt"] == 11
     assert spans[0].attributes["llm.token_count.completion"] == 3
+
+
+def test_local_llm_call_gets_an_llm_span():
+    import httpx
+    import openai
+    from code_review import llm_factory
+    from openinference.instrumentation.openai import OpenAIInstrumentor
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+    from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
+        InMemorySpanExporter,
+    )
+
+    def fake_ollama(request):
+        return httpx.Response(
+            200,
+            json={
+                "id": "chatcmpl-1",
+                "object": "chat.completion",
+                "created": 1,
+                "model": "qwen3:4b",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {"role": "assistant", "content": "hello"},
+                        "finish_reason": "stop",
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 11,
+                    "completion_tokens": 3,
+                    "total_tokens": 14,
+                },
+            },
+        )
+
+    exporter = InMemorySpanExporter()
+    provider = TracerProvider()
+    provider.add_span_processor(SimpleSpanProcessor(exporter))
+    OpenAIInstrumentor().uninstrument()  # an earlier test may have used another provider
+    observability._instrument_openai(provider)
+    try:
+        llm = llm_factory.make_llm(
+            "local"
+        )  # Ollama through crewai's OpenAI-compatible provider
+        llm._client = openai.OpenAI(  # same SDK client, but answered by a fake Ollama
+            api_key="ollama",
+            base_url="http://localhost:11434/v1",
+            http_client=httpx.Client(transport=httpx.MockTransport(fake_ollama)),
+        )
+        answer = llm.call("say hello")
+    finally:
+        OpenAIInstrumentor().uninstrument()
+
+    spans = exporter.get_finished_spans()
+    assert answer == "hello"
+    assert len(spans) == 1
+    assert spans[0].attributes["llm.token_count.prompt"] == 11
+    assert spans[0].attributes["llm.token_count.completion"] == 3

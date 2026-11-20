@@ -13,6 +13,7 @@ dependencies = [
     "opentelemetry-exporter-otlp~=1.45.2",
     "openinference-instrumentation-crewai~=1.1.29",
     "openinference-instrumentation-anthropic~=3.3.8",
+    "openinference-instrumentation-openai~=0.1.76",
 ]
 
 [project.scripts]

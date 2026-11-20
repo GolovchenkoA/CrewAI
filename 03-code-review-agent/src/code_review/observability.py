@@ -74,6 +74,7 @@ def _get_tracer():
     if _tracer is not None:
         _instrument_crewai(provider)
         _instrument_anthropic(provider)
+        _instrument_openai(provider)
     return _tracer
 
 
@@ -99,6 +100,20 @@ def _instrument_anthropic(provider) -> None:
         AnthropicInstrumentor().instrument(tracer_provider=provider)
     except Exception as exc:  # noqa: BLE001 - the other spans still work without it
         logger.warning("LLM spans disabled, could not instrument Anthropic: %s", exc)
+
+
+def _instrument_openai(provider) -> None:
+    """Add one span per call to the local Ollama model; optional, never fatal.
+
+    crewai talks to Ollama through the `openai` SDK (Ollama's OpenAI-compatible /v1 endpoint), which
+    this patches. Any other call made through the OpenAI SDK is traced too.
+    """
+    try:
+        from openinference.instrumentation.openai import OpenAIInstrumentor
+
+        OpenAIInstrumentor().instrument(tracer_provider=provider)
+    except Exception as exc:  # noqa: BLE001 - the other spans still work without it
+        logger.warning("Local LLM spans disabled, could not instrument OpenAI: %s", exc)
 
 
 @contextmanager
