@@ -13,6 +13,14 @@ dependencies = [
     "opentelemetry-exporter-otlp>=1.27",
 ]
 
+[project.scripts]
+code_review_run = "code_review.main:run"
+code_review_train = "code_review.main:train"
+code_review_test = "code_review.main:test"
+
+[dependency-groups]
+dev = ["pytest>=9.2.0"]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -22,3 +30,6 @@ packages = ["src/code_review"]
 
 [tool.crewai]
 type = "crew"
+
+[tool.pytest.ini_options]
+filterwarnings = ["ignore::DeprecationWarning:crewai.*"]

@@ -1,0 +1,45 @@
+diff --git a/app/users.py b/app/users.py
+index 3b18e51..a4c92d0 100644
+--- a/app/users.py
++++ b/app/users.py
+@@ -1,9 +1,24 @@
+ import sqlite3
++import pickle
++
++API_KEY = "sk-live-9f8e7d6c5b4a"
+ 
+ 
+ def connect():
+     return sqlite3.connect("app.db")
+ 
+ 
++def find_user(name):
++    conn = connect()
++    cur = conn.execute("SELECT * FROM users WHERE name = '" + name + "'")
++    return cur.fetchone()
++
++
++def load_session(blob):
++    return pickle.loads(blob)
++
++
++def d(x, y, z):
++    # TODO remove
++    return x + y + z
++
+ def list_users():
+     return connect().execute("SELECT * FROM users").fetchall()
+diff --git a/tests/test_users.py b/tests/test_users.py
+index 1111111..2222222 100644
+--- a/tests/test_users.py
++++ b/tests/test_users.py
+@@ -1,4 +1,8 @@
+ from app.users import list_users
+ 
+ 
+ def test_list_users_returns_list():
+     assert isinstance(list_users(), list)
++
++
++def test_connect_opens_database():
++    assert connect() is not None

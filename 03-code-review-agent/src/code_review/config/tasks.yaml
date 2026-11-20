@@ -1,0 +1,48 @@
+security_task:
+  description: >
+    Review this part of the pull request "{title}" for security problems.
+    Lines are prefixed with their line number in the new file; lines starting with a minus are removed.
+    Report only problems in added or changed lines.
+
+    {diff}
+  expected_output: >
+    A list of findings. Each finding has: file, line (the new-file line number shown in the diff),
+    severity (critical, high, medium, low or info), message, suggestion.
+    An empty list if there is nothing to report.
+
+style_task:
+  description: >
+    Review this part of the pull request "{title}" for naming, structure, dead code and duplication.
+    Lines are prefixed with their line number in the new file; lines starting with a minus are removed.
+    Report only problems in added or changed lines.
+
+    {diff}
+  expected_output: >
+    A list of findings. Each finding has: file, line (the new-file line number shown in the diff),
+    severity (usually low or info), message, suggestion.
+    An empty list if there is nothing to report.
+
+test_task:
+  description: >
+    Check whether the behaviour changed in this part of the pull request "{title}" is covered by tests.
+    Lines are prefixed with their line number in the new file; lines starting with a minus are removed.
+    Point at the changed code that lacks a test; do not point at test files themselves.
+
+    {diff}
+  expected_output: >
+    A list of findings. Each finding has: file, line of the untested code (new-file line number),
+    severity (usually medium or low), message, suggestion (which test to add).
+    An empty list if everything is covered.
+
+lead_task:
+  description: >
+    Write the review comment for the pull request "{title}" from these findings of the specialist
+    reviewers (JSON). Order them from critical to info, merge duplicates, and start with a
+    one-sentence summary. Every finding in the comment must name its file and line as `path:line`.
+    If there are no findings, say so in one friendly sentence.
+
+    Findings:
+    {findings}
+  expected_output: >
+    A Markdown comment: a one-sentence summary, then a list of findings grouped by severity, each
+    as "- **severity** `path:line` message (suggestion)".

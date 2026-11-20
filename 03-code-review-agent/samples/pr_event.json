@@ -1,0 +1,11 @@
+{
+  "action": "opened",
+  "number": 7,
+  "pull_request": {
+    "number": 7,
+    "title": "Add user lookup"
+  },
+  "repository": {
+    "full_name": "your-org/your-repo"
+  }
+}

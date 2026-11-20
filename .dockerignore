@@ -1,0 +1,8 @@
+.venv
+**/.venv
+.git
+**/__pycache__
+**/.env
+**/.crewai-test-storage
+**/output
+**/db

@@ -1,0 +1,16 @@
+# Run from the repository root:  docker compose -f 03-code-review-agent/docker-compose.yml up --build
+services:
+  code-review:
+    build:
+      context: ..                      # the repository root (workspace lock file)
+      dockerfile: 03-code-review-agent/Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      # a local LLM on the host machine (Windows/macOS); on Linux run Ollama on the Docker network instead
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped

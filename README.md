@@ -14,7 +14,7 @@ Suggested order: 01 teaches the vocabulary, 02 the architecture, 03 the operatio
 
 ## Status
 
-Workspace, dependencies and documentation are in place. The Python code of the projects is not implemented yet: each `src/<package>/` is an empty skeleton. Once a project has its scaffold (`crewai create`), add a `[project.scripts]` entry point so `crewai run` / `crewai flow kickoff` can start it.
+All three projects are implemented and covered by offline tests (stub LLM, no key needed). Each project has its own script names (`research_crew_*`, `triage_flow_*`, `code_review_*`), so they do not collide in the shared venv; see the project READMEs. Runs against real models (Claude, local Ollama) were done for 01 and 02; project 03 has only been tested offline so far.
 
 ## Repository layout
 
