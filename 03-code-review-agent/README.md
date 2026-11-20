@@ -131,7 +131,7 @@ Notes:
 
 ### Optional observability
 
-Set `OTEL_EXPORTER_OTLP_ENDPOINT` in `.env` (any OTLP/HTTP backend, including Langfuse's OTLP endpoint; add its auth with the standard `OTEL_EXPORTER_OTLP_HEADERS`). Each review then produces one `review` span with title, file, chunk and finding counts. Leave it empty to disable. The trace has only this one span per review (no per-agent or LLM-call spans).
+Set `OTEL_EXPORTER_OTLP_ENDPOINT` in `.env` (any OTLP/HTTP backend, including Langfuse's OTLP endpoint; add its auth with the standard `OTEL_EXPORTER_OTLP_HEADERS`). Each review then produces one `review` span with title, file, chunk and finding counts. Leave it empty to disable. Below it, `openinference-instrumentation-crewai` adds one span per crew (`reviewers_crew.kickoff`, `lead_crew.kickoff`), per task/agent (`<Agent role>._execute_core`) and per tool call, with the prompt and output as attributes. It does not add LLM-call spans (model, tokens); that needs a provider instrumentor such as `openinference-instrumentation-anthropic`. After upgrading, rebuild the image (`up --build`).
 
 Tracing never breaks a review. If the backend is not running, the span export fails in the background after a 2 second timeout and only a warning is logged; if the tracing setup itself fails, tracing is switched off with one warning.
 

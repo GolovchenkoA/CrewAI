@@ -71,7 +71,19 @@ def _get_tracer():
     except Exception as exc:  # noqa: BLE001 - any setup problem: run without tracing
         logger.warning("Tracing disabled, could not set up OpenTelemetry: %s", exc)
         _tracer = None
+    if _tracer is not None:
+        _instrument_crewai(provider)
     return _tracer
+
+
+def _instrument_crewai(provider) -> None:
+    """Add crew, task and tool spans (OpenInference) below the `review` span; optional, never fatal."""
+    try:
+        from openinference.instrumentation.crewai import CrewAIInstrumentor
+
+        CrewAIInstrumentor().instrument(tracer_provider=provider)
+    except Exception as exc:  # noqa: BLE001 - the review span still works without it
+        logger.warning("CrewAI spans disabled, could not instrument CrewAI: %s", exc)
 
 
 @contextmanager

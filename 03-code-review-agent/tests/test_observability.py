@@ -53,3 +53,36 @@ def test_setup_failure_turns_tracing_off_with_a_warning(monkeypatch, caplog):
 
     assert observability._tracer is None
     assert "Tracing disabled" in caplog.text
+
+
+def test_crewai_spans_appear_below_the_review_span(monkeypatch):
+    from code_review import llm_factory, review
+    from openinference.instrumentation.crewai import CrewAIInstrumentor
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+    from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
+        InMemorySpanExporter,
+    )
+    from test_review import DIFF, FULL_COMMENT, make_stub
+
+    exporter = InMemorySpanExporter()
+    provider = TracerProvider()
+    provider.add_span_processor(SimpleSpanProcessor(exporter))
+    reset(monkeypatch)
+    monkeypatch.setattr(observability, "_tracer", provider.get_tracer("t"))
+    monkeypatch.setattr(observability, "_initialised", True)
+    monkeypatch.setattr(
+        llm_factory, "make_llm", lambda *a, **k: make_stub([FULL_COMMENT])
+    )
+    CrewAIInstrumentor().uninstrument()  # an earlier test may have instrumented with another provider
+    observability._instrument_crewai(provider)
+    try:
+        review.review_diff(DIFF, "Add user lookup")
+    finally:
+        CrewAIInstrumentor().uninstrument()
+
+    names = [s.name for s in exporter.get_finished_spans()]
+    print(names)
+    assert "review" in names
+    assert any("kickoff" in n.lower() for n in names)
+    assert len(names) > 3
