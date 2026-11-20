@@ -12,6 +12,7 @@ dependencies = [
 [tool.uv]
 # The root only aggregates the members; it is not a package itself.
 package = false
+# crewai[anthropic] pins anthropic~=0.73.0; the OpenInference Anthropic instrumentor needs a newer SDK.
 
 [tool.uv.sources]
 research-report-crew = { workspace = true }
@@ -26,4 +27,4 @@ members = [
 ]
 
 [dependency-groups]
-dev = ["ruff>=0.15"]
+dev = ["ruff~=0.17.6"]

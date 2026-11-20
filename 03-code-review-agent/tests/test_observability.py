@@ -86,3 +86,55 @@ def test_crewai_spans_appear_below_the_review_span(monkeypatch):
     assert "review" in names
     assert any("kickoff" in n.lower() for n in names)
     assert len(names) > 3
+
+
+def test_claude_call_gets_an_llm_span():
+    import anthropic
+    import httpx2
+    from code_review import llm_factory
+    from openinference.instrumentation.anthropic import AnthropicInstrumentor
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+    from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
+        InMemorySpanExporter,
+    )
+
+    def fake_api(request):
+        return httpx2.Response(
+            200,
+            json={
+                "id": "msg_1",
+                "type": "message",
+                "role": "assistant",
+                "model": "claude-sonnet-5-5",
+                "content": [{"type": "text", "text": "hello"}],
+                "stop_reason": "end_turn",
+                "stop_sequence": None,
+                "usage": {"input_tokens": 11, "output_tokens": 3},
+            },
+        )
+
+    exporter = InMemorySpanExporter()
+    provider = TracerProvider()
+    provider.add_span_processor(SimpleSpanProcessor(exporter))
+    AnthropicInstrumentor().uninstrument()  # an earlier test may have used another provider
+    observability._instrument_anthropic(provider)
+    try:
+        llm = llm_factory.make_llm(
+            "claude"
+        )  # crewai's Claude provider, as the service builds it
+        llm._client = (
+            anthropic.Anthropic(  # same SDK client, but answered by a fake API
+                api_key="test-key",
+                http_client=httpx2.Client(transport=httpx2.MockTransport(fake_api)),
+            )
+        )
+        answer = llm.call("say hello")
+    finally:
+        AnthropicInstrumentor().uninstrument()
+
+    spans = exporter.get_finished_spans()
+    assert answer == "hello"
+    assert len(spans) == 1
+    assert spans[0].attributes["llm.token_count.prompt"] == 11
+    assert spans[0].attributes["llm.token_count.completion"] == 3

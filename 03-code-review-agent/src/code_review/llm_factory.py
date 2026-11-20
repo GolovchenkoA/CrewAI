@@ -13,7 +13,10 @@ def make_llm(provider: str | None = None, temperature: float = 0.2) -> LLM:
     provider = (provider or os.getenv("LLM_PROVIDER") or "local").strip().lower()
     if provider == "claude":
         return LLM(
-            model=os.getenv("CLAUDE_MODEL", "anthropic/claude-sonnet-5-5")
+            model=os.getenv("CLAUDE_MODEL", "anthropic/claude-sonnet-5-5"),
+            # explicit cap: crewai's default (128000 for Sonnet 5) makes the anthropic SDK refuse
+            # non-streaming calls ("Streaming is required for operations that may take longer than 10 minutes")
+            max_tokens=int(os.getenv("CLAUDE_MAX_TOKENS", "8192")),
         )
     if provider == "local":
         return LLM(

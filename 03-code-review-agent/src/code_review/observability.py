@@ -73,6 +73,7 @@ def _get_tracer():
         _tracer = None
     if _tracer is not None:
         _instrument_crewai(provider)
+        _instrument_anthropic(provider)
     return _tracer
 
 
@@ -84,6 +85,20 @@ def _instrument_crewai(provider) -> None:
         CrewAIInstrumentor().instrument(tracer_provider=provider)
     except Exception as exc:  # noqa: BLE001 - the review span still works without it
         logger.warning("CrewAI spans disabled, could not instrument CrewAI: %s", exc)
+
+
+def _instrument_anthropic(provider) -> None:
+    """Add one span per Claude API call (model, messages, token counts); optional, never fatal.
+
+    crewai's Claude provider uses the official `anthropic` SDK, which this patches. Local (Ollama)
+    models are not covered.
+    """
+    try:
+        from openinference.instrumentation.anthropic import AnthropicInstrumentor
+
+        AnthropicInstrumentor().instrument(tracer_provider=provider)
+    except Exception as exc:  # noqa: BLE001 - the other spans still work without it
+        logger.warning("LLM spans disabled, could not instrument Anthropic: %s", exc)
 
 
 @contextmanager
