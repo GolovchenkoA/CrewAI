@@ -4,8 +4,8 @@ version = "0.1.0"
 description = "Four-agent crew that turns a topic into a Markdown report"
 requires-python = ">=3.12,<3.14"
 dependencies = [
-    "crewai[anthropic,tools]>=1.15.41,<2",
-    "python-dotenv>=1.0",
+    "crewai[anthropic,tools]~=1.15.41",
+    "python-dotenv~=1.2.4",
 ]
 
 # Script names are project-specific: all workspace members share one .venv,
@@ -29,5 +29,5 @@ type = "crew"
 
 [dependency-groups]
 dev = [
-    "pytest>=9.2.0",
+    "pytest~=9.2.0",
 ]

@@ -4,13 +4,13 @@ version = "0.1.0"
 description = "Event-driven CrewAI flow that triages support tickets"
 requires-python = ">=3.12,<3.14"
 dependencies = [
-    "crewai[anthropic,tools]>=1.15.41,<2",
-    "mcp>=1.2",
-    "fastapi>=0.115",
-    "uvicorn>=0.30",
-    "python-dotenv>=1.0",
-    "pyyaml>=6",
-    "ollama>=0.4",   # Ollama embedder for Memory / Knowledge
+    "crewai[anthropic,tools]~=1.15.41",
+    "mcp~=1.30.0",
+    "fastapi~=0.162.5",
+    "uvicorn~=0.54.0",
+    "python-dotenv~=1.2.4",
+    "pyyaml~=6.0.3",
+    "ollama~=0.6.3",   # Ollama embedder for Memory / Knowledge
 ]
 
 [build-system]
@@ -31,5 +31,5 @@ type = "flow"
 
 [dependency-groups]
 dev = [
-    "pytest>=9.2.0",
+    "pytest~=9.2.0",
 ]
