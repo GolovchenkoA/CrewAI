@@ -8,8 +8,10 @@ resolution-markers = [
 
 [manifest]
 members = [
+    "agent-reasoning",
     "code-review-agent",
     "conditional-tasks",
+    "conversational-flow",
     "crewai-learning",
     "flow-checkpoint",
     "hierarchical-delegation",
@@ -19,6 +21,29 @@ members = [
     "support-ticket-triage-flow",
 ]
 overrides = [{ name = "anthropic", specifier = "~=2.12.0" }]
+
+[[package]]
+name = "agent-reasoning"
+version = "0.1.0"
+source = { editable = "10-agent-reasoning" }
+dependencies = [
+    { name = "crewai", extra = ["anthropic"] },
+    { name = "python-dotenv" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "crewai", extras = ["anthropic"], specifier = "~=1.15.44" },
+    { name = "python-dotenv", specifier = "~=1.2.4" },
+]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = "~=9.2.0" }]
 
 [[package]]
 name = "aiofiles"
@@ -409,6 +434,29 @@ requires-dist = [
 dev = [{ name = "pytest", specifier = "~=9.2.0" }]
 
 [[package]]
+name = "conversational-flow"
+version = "0.1.0"
+source = { editable = "09-conversational-flow" }
+dependencies = [
+    { name = "crewai", extra = ["anthropic"] },
+    { name = "python-dotenv" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "crewai", extras = ["anthropic"], specifier = "~=1.15.44" },
+    { name = "python-dotenv", specifier = "~=1.2.4" },
+]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = "~=9.2.0" }]
+
+[[package]]
 name = "crewai"
 version = "1.15.44"
 source = { registry = "https://pypi.org/simple" }
@@ -514,8 +562,10 @@ name = "crewai-learning"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "agent-reasoning" },
     { name = "code-review-agent" },
     { name = "conditional-tasks" },
+    { name = "conversational-flow" },
     { name = "flow-checkpoint" },
     { name = "hierarchical-delegation" },
     { name = "research-report-crew" },
@@ -531,8 +581,10 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "agent-reasoning", editable = "10-agent-reasoning" },
     { name = "code-review-agent", editable = "03-code-review-agent" },
     { name = "conditional-tasks", editable = "05-conditional-tasks" },
+    { name = "conversational-flow", editable = "09-conversational-flow" },
     { name = "flow-checkpoint", editable = "08-flow-checkpoint" },
     { name = "hierarchical-delegation", editable = "04-hierarchical-delegation" },
     { name = "research-report-crew", editable = "01-research-report-crew" },

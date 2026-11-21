@@ -53,6 +53,8 @@ trained_agents_data.pkl
 crewai_flow.html
 # Flow checkpoints (project 08)
 .checkpoints/
+# Chat sessions (project 09)
+.chat/
 # Run logs
 *.log
 logs/

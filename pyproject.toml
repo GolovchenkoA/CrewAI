@@ -12,6 +12,8 @@ dependencies = [
     "streaming",
     "standalone-calls",
     "flow-checkpoint",
+    "conversational-flow",
+    "agent-reasoning",
 ]
 
 [tool.uv]
@@ -29,6 +31,8 @@ conditional-tasks = { workspace = true }
 streaming = { workspace = true }
 standalone-calls = { workspace = true }
 flow-checkpoint = { workspace = true }
+conversational-flow = { workspace = true }
+agent-reasoning = { workspace = true }
 
 [tool.uv.workspace]
 members = [
@@ -40,6 +44,8 @@ members = [
     "06-streaming",
     "07-standalone-calls",
     "08-flow-checkpoint",
+    "09-conversational-flow",
+    "10-agent-reasoning",
 ]
 
 [dependency-groups]
