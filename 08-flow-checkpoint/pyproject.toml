@@ -1,0 +1,29 @@
+[project]
+name = "flow-checkpoint"
+version = "0.1.0"
+description = "Flow checkpointing: stop a flow in the middle and resume it"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "crewai~=1.15.44",
+    "python-dotenv~=1.2.4",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/flow_checkpoint"]
+
+# Script names are project-specific: all workspace members share one .venv.
+[project.scripts]
+checkpoint_run = "flow_checkpoint.main:run"
+
+[tool.crewai]
+type = "flow"
+
+[dependency-groups]
+dev = ["pytest~=9.2.0"]
+
+[tool.pytest.ini_options]
+filterwarnings = ["ignore::DeprecationWarning:crewai.*"]

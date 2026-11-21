@@ -11,6 +11,7 @@ dependencies = [
     "conditional-tasks",
     "streaming",
     "standalone-calls",
+    "flow-checkpoint",
 ]
 
 [tool.uv]
@@ -27,6 +28,7 @@ hierarchical-delegation = { workspace = true }
 conditional-tasks = { workspace = true }
 streaming = { workspace = true }
 standalone-calls = { workspace = true }
+flow-checkpoint = { workspace = true }
 
 [tool.uv.workspace]
 members = [
@@ -37,6 +39,7 @@ members = [
     "05-conditional-tasks",
     "06-streaming",
     "07-standalone-calls",
+    "08-flow-checkpoint",
 ]
 
 [dependency-groups]

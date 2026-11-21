@@ -1,6 +1,6 @@
 # CrewAI Learning Projects
 
-Seven hands-on projects that together cover the main aspects of [CrewAI](https://docs.crewai.com). They form one [uv workspace](https://docs.astral.sh/uv/concepts/projects/workspaces/): a single shared virtual environment (`.venv`) and a single lock file (`uv.lock`) in this folder, so dependencies are downloaded once, not per project.
+8 hands-on projects that together cover the main aspects of [CrewAI](https://docs.crewai.com). They form one [uv workspace](https://docs.astral.sh/uv/concepts/projects/workspaces/): a single shared virtual environment (`.venv`) and a single lock file (`uv.lock`) in this folder, so dependencies are downloaded once, not per project.
 
 All projects use Python 3.12 (CrewAI 1.15.x does not support 3.14) and can switch between Claude and a local Ollama model with `LLM_PROVIDER=claude|local`.
 
@@ -13,12 +13,13 @@ All projects use Python 3.12 (CrewAI 1.15.x does not support 3.14) and can switc
 | [05-conditional-tasks](05-conditional-tasks/README.md) | An incident is triaged; a deep dive runs only for high severity. Minimal demo. | `ConditionalTask`, structured output |
 | [06-streaming](06-streaming/README.md) | Prints crew and flow output while the model is still writing it. Minimal demo. | `stream=True` for crews, flows and LLMs |
 | [07-standalone-calls](07-standalone-calls/README.md) | `LLM.call` and `Agent.kickoff` with a tool and structured output, no crew. Minimal demo. | Standalone LLM and agent calls |
+| [08-flow-checkpoint](08-flow-checkpoint/README.md) | A three-step flow fails in step 2 and the rerun resumes from the checkpoint without repeating step 1. Minimal demo, no model needed. | Flow checkpointing, `from_checkpoint` |
 
-Suggested order: 01 teaches the vocabulary, 02 the architecture, 03 the operations. 04 to 07 are small single-feature demos (see [FUTURE_PROJECTS.md](FUTURE_PROJECTS.md) for the planned ones).
+Suggested order: 01 teaches the vocabulary, 02 the architecture, 03 the operations. 04 to 08 are small single-feature demos (see [FUTURE_PROJECTS.md](FUTURE_PROJECTS.md) for the planned ones).
 
 ## Status
 
-All seven projects are implemented and covered by offline tests (stub LLM, no key needed). Each project has its own script names (`research_crew_*`, `triage_flow_*`, `code_review_*`, `hierarchical_run`, `conditional_run`, `streaming_run`, `standalone_run`), so they do not collide in the shared venv; see the project READMEs. Runs against real models (Claude, local Ollama) were done for 01 and 02; project 03 has only been tested offline so far; 04 to 07 were also run against `qwen3:4b`.
+All 8 projects are implemented and covered by offline tests (stub LLM, no key needed). Each project has its own script names (`research_crew_*`, `triage_flow_*`, `code_review_*`, `hierarchical_run`, `conditional_run`, `streaming_run`, `standalone_run`, `checkpoint_run`), so they do not collide in the shared venv; see the project READMEs. Runs against real models (Claude, local Ollama) were done for 01 and 02; project 03 has only been tested offline so far; 04 to 07 were also run against `qwen3:4b`; 08 needs no model and was run as a CLI.
 
 ## Repository layout
 
@@ -34,7 +35,8 @@ All seven projects are implemented and covered by offline tests (stub LLM, no ke
 ├── 04-hierarchical-delegation/      # ... src/hierarchical_delegation/
 ├── 05-conditional-tasks/            # ... src/conditional_tasks/
 ├── 06-streaming/                    # ... src/streaming_demo/
-└── 07-standalone-calls/             # ... src/standalone_calls/
+├── 07-standalone-calls/             # ... src/standalone_calls/
+└── 08-flow-checkpoint/              # ... src/flow_checkpoint/
 ```
 
 Each project keeps its own `.env` (git-ignored). Copy `.env.example` to `.env` and fill in your keys.
@@ -86,11 +88,12 @@ Copy-Item 04-hierarchical-delegation\.env.example 04-hierarchical-delegation\.en
 Copy-Item 05-conditional-tasks\.env.example 05-conditional-tasks\.env
 Copy-Item 06-streaming\.env.example 06-streaming\.env
 Copy-Item 07-standalone-calls\.env.example 07-standalone-calls\.env
+Copy-Item 08-flow-checkpoint\.env.example 08-flow-checkpoint\.env
 ```
 
 **Linux / macOS**
 ```bash
-for p in 01-research-report-crew 02-support-ticket-triage-flow 03-code-review-agent 04-hierarchical-delegation 05-conditional-tasks 06-streaming 07-standalone-calls; do cp $p/.env.example $p/.env; done
+for p in 01-research-report-crew 02-support-ticket-triage-flow 03-code-review-agent 04-hierarchical-delegation 05-conditional-tasks 06-streaming 07-standalone-calls 08-flow-checkpoint; do cp $p/.env.example $p/.env; done
 ```
 
 Edit each `.env`: set `LLM_PROVIDER=claude` and `ANTHROPIC_API_KEY`, or `LLM_PROVIDER=local`. `.env` files are never committed; API keys must be entered again on every computer.
