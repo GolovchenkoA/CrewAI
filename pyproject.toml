@@ -7,6 +7,10 @@ dependencies = [
     "research-report-crew",
     "support-ticket-triage-flow",
     "code-review-agent",
+    "hierarchical-delegation",
+    "conditional-tasks",
+    "streaming",
+    "standalone-calls",
 ]
 
 [tool.uv]
@@ -19,12 +23,20 @@ override-dependencies = ["anthropic~=2.12.0"]
 research-report-crew = { workspace = true }
 support-ticket-triage-flow = { workspace = true }
 code-review-agent = { workspace = true }
+hierarchical-delegation = { workspace = true }
+conditional-tasks = { workspace = true }
+streaming = { workspace = true }
+standalone-calls = { workspace = true }
 
 [tool.uv.workspace]
 members = [
     "01-research-report-crew",
     "02-support-ticket-triage-flow",
     "03-code-review-agent",
+    "04-hierarchical-delegation",
+    "05-conditional-tasks",
+    "06-streaming",
+    "07-standalone-calls",
 ]
 
 [dependency-groups]

@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Four-agent crew that turns a topic into a Markdown report"
 requires-python = ">=3.12,<3.14"
 dependencies = [
-    "crewai[anthropic,tools]~=1.15.41",
+    "crewai[anthropic,tools]~=1.15.44",
     "python-dotenv~=1.2.4",
 ]
 

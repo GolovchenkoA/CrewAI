@@ -1,6 +1,6 @@
 # CrewAI Learning Projects
 
-Three hands-on projects that together cover the main aspects of [CrewAI](https://docs.crewai.com). They form one [uv workspace](https://docs.astral.sh/uv/concepts/projects/workspaces/): a single shared virtual environment (`.venv`) and a single lock file (`uv.lock`) in this folder, so dependencies are downloaded once, not per project.
+Seven hands-on projects that together cover the main aspects of [CrewAI](https://docs.crewai.com). They form one [uv workspace](https://docs.astral.sh/uv/concepts/projects/workspaces/): a single shared virtual environment (`.venv`) and a single lock file (`uv.lock`) in this folder, so dependencies are downloaded once, not per project.
 
 All projects use Python 3.12 (CrewAI 1.15.x does not support 3.14) and can switch between Claude and a local Ollama model with `LLM_PROVIDER=claude|local`.
 
@@ -9,12 +9,16 @@ All projects use Python 3.12 (CrewAI 1.15.x does not support 3.14) and can switc
 | [01-research-report-crew](01-research-report-crew/README.md) | Four agents (researcher, analyst, writer, editor) turn a topic into a Markdown report. | Agents, tasks, crews, YAML config, sequential and hierarchical process, tools, structured output, guardrails, async tasks |
 | [02-support-ticket-triage-flow](02-support-ticket-triage-flow/README.md) | An event-driven flow classifies support tickets, routes them to specialist crews and escalates to a human when confidence is low. | Flows, routers, typed state, MCP tools, Knowledge (RAG), Memory, human-in-the-loop |
 | [03-code-review-agent](03-code-review-agent/README.md) | A webhook service where security, style and test reviewers review pull requests and post a summary. | Planning, train and test, event listeners, observability, cost tracking, batch runs, Docker deployment |
+| [04-hierarchical-delegation](04-hierarchical-delegation/README.md) | A manager agent delegates two tasks to a researcher and a writer. Minimal demo. | Hierarchical process, manager agent, delegation |
+| [05-conditional-tasks](05-conditional-tasks/README.md) | An incident is triaged; a deep dive runs only for high severity. Minimal demo. | `ConditionalTask`, structured output |
+| [06-streaming](06-streaming/README.md) | Prints crew and flow output while the model is still writing it. Minimal demo. | `stream=True` for crews, flows and LLMs |
+| [07-standalone-calls](07-standalone-calls/README.md) | `LLM.call` and `Agent.kickoff` with a tool and structured output, no crew. Minimal demo. | Standalone LLM and agent calls |
 
-Suggested order: 01 teaches the vocabulary, 02 the architecture, 03 the operations.
+Suggested order: 01 teaches the vocabulary, 02 the architecture, 03 the operations. 04 to 07 are small single-feature demos (see [FUTURE_PROJECTS.md](FUTURE_PROJECTS.md) for the planned ones).
 
 ## Status
 
-All three projects are implemented and covered by offline tests (stub LLM, no key needed). Each project has its own script names (`research_crew_*`, `triage_flow_*`, `code_review_*`), so they do not collide in the shared venv; see the project READMEs. Runs against real models (Claude, local Ollama) were done for 01 and 02; project 03 has only been tested offline so far.
+All seven projects are implemented and covered by offline tests (stub LLM, no key needed). Each project has its own script names (`research_crew_*`, `triage_flow_*`, `code_review_*`, `hierarchical_run`, `conditional_run`, `streaming_run`, `standalone_run`), so they do not collide in the shared venv; see the project READMEs. Runs against real models (Claude, local Ollama) were done for 01 and 02; project 03 has only been tested offline so far; 04 to 07 were also run against `qwen3:4b`.
 
 ## Repository layout
 
@@ -26,7 +30,11 @@ All three projects are implemented and covered by offline tests (stub LLM, no ke
 ├── .venv/                    # shared environment (git-ignored, created by `uv sync`)
 ├── 01-research-report-crew/  # pyproject.toml, .env.example, src/research_crew/
 ├── 02-support-ticket-triage-flow/   # ... src/triage_flow/
-└── 03-code-review-agent/            # ... src/code_review/
+├── 03-code-review-agent/            # ... src/code_review/
+├── 04-hierarchical-delegation/      # ... src/hierarchical_delegation/
+├── 05-conditional-tasks/            # ... src/conditional_tasks/
+├── 06-streaming/                    # ... src/streaming_demo/
+└── 07-standalone-calls/             # ... src/standalone_calls/
 ```
 
 Each project keeps its own `.env` (git-ignored). Copy `.env.example` to `.env` and fill in your keys.
@@ -65,7 +73,7 @@ cd CrewAI
 uv sync --locked
 ```
 
-`uv sync --locked` creates `.venv` in the repo root and installs exactly the versions in `uv.lock` for all three projects. Use plain `uv sync` if you want it to update the lock file when dependencies change. To install only one project: `uv sync --package research-report-crew` (other names: `support-ticket-triage-flow`, `code-review-agent`).
+`uv sync --locked` creates `.venv` in the repo root and installs exactly the versions in `uv.lock` for all projects. Use plain `uv sync` if you want it to update the lock file when dependencies change. To install only one project: `uv sync --package research-report-crew` (other names: `support-ticket-triage-flow`, `code-review-agent`, `hierarchical-delegation`, `conditional-tasks`, `streaming`, `standalone-calls`).
 
 ### 3. Configure each project
 
@@ -74,11 +82,15 @@ uv sync --locked
 Copy-Item 01-research-report-crew\.env.example 01-research-report-crew\.env
 Copy-Item 02-support-ticket-triage-flow\.env.example 02-support-ticket-triage-flow\.env
 Copy-Item 03-code-review-agent\.env.example 03-code-review-agent\.env
+Copy-Item 04-hierarchical-delegation\.env.example 04-hierarchical-delegation\.env
+Copy-Item 05-conditional-tasks\.env.example 05-conditional-tasks\.env
+Copy-Item 06-streaming\.env.example 06-streaming\.env
+Copy-Item 07-standalone-calls\.env.example 07-standalone-calls\.env
 ```
 
 **Linux / macOS**
 ```bash
-for p in 01-research-report-crew 02-support-ticket-triage-flow 03-code-review-agent; do cp $p/.env.example $p/.env; done
+for p in 01-research-report-crew 02-support-ticket-triage-flow 03-code-review-agent 04-hierarchical-delegation 05-conditional-tasks 06-streaming 07-standalone-calls; do cp $p/.env.example $p/.env; done
 ```
 
 Edit each `.env`: set `LLM_PROVIDER=claude` and `ANTHROPIC_API_KEY`, or `LLM_PROVIDER=local`. `.env` files are never committed; API keys must be entered again on every computer.

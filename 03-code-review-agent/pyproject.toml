@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "CrewAI pull request review service"
 requires-python = ">=3.12,<3.14"
 dependencies = [
-    "crewai[anthropic,tools]~=1.15.41",
+    "crewai[anthropic,tools]~=1.15.44",
     "fastapi~=0.162.5",
     "uvicorn~=0.54.0",
     "httpx~=0.28.1",
