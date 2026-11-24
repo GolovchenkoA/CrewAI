@@ -1,6 +1,6 @@
 # CrewAI Learning Projects
 
-10 hands-on projects that together cover the main aspects of [CrewAI](https://docs.crewai.com). They form one [uv workspace](https://docs.astral.sh/uv/concepts/projects/workspaces/): a single shared virtual environment (`.venv`) and a single lock file (`uv.lock`) in this folder, so dependencies are downloaded once, not per project.
+13 hands-on projects that together cover the main aspects of [CrewAI](https://docs.crewai.com). They form one [uv workspace](https://docs.astral.sh/uv/concepts/projects/workspaces/): a single shared virtual environment (`.venv`) and a single lock file (`uv.lock`) in this folder, so dependencies are downloaded once, not per project.
 
 All projects use Python 3.12 (CrewAI 1.15.x does not support 3.14) and can switch between Claude and a local Ollama model with `LLM_PROVIDER=claude|local`.
 
@@ -16,12 +16,15 @@ All projects use Python 3.12 (CrewAI 1.15.x does not support 3.14) and can switc
 | [08-flow-checkpoint](08-flow-checkpoint/README.md) | A three-step flow fails in step 2 and the rerun resumes from the checkpoint without repeating step 1. Minimal demo, no model needed. | Flow checkpointing, `from_checkpoint` |
 | [09-conversational-flow](09-conversational-flow/README.md) | A console chat: one `handle_turn` call per message, state kept per session id. Minimal demo. | Conversational flow (experimental) |
 | [10-agent-reasoning](10-agent-reasoning/README.md) | The same task with and without agent planning; prints the plan and the cost. Minimal demo. | `planning_config` (agent reasoning) |
+| [11-multimodal-agent](11-multimodal-agent/README.md) | An agent answers a question about a chart image through a vision model. Minimal demo. | Image input, a tool that calls a vision LLM |
+| [12-stock-tools](12-stock-tools/README.md) | One agent with `FileReadTool` and `ScrapeWebsiteTool`; shows which tools were called. Minimal demo. | `crewai_tools` stock tools |
+| [13-agent-to-agent](13-agent-to-agent/README.md) | An A2A server agent and a client agent in two processes. Minimal demo. | Agent-to-agent protocol (`A2AServerConfig`, `A2AClientConfig`) |
 
-Suggested order: 01 teaches the vocabulary, 02 the architecture, 03 the operations. 04 to 10 are small single-feature demos (see [FUTURE_PROJECTS.md](FUTURE_PROJECTS.md) for the planned ones).
+Suggested order: 01 teaches the vocabulary, 02 the architecture, 03 the operations. 04 to 13 are small single-feature demos (see [FUTURE_PROJECTS.md](FUTURE_PROJECTS.md) for the planned ones).
 
 ## Status
 
-All 10 projects are implemented and covered by offline tests (stub LLM, no key needed). Each project has its own script names (`research_crew_*`, `triage_flow_*`, `code_review_*`, `hierarchical_run`, `conditional_run`, `streaming_run`, `standalone_run`, `checkpoint_run`, `chat_run`, `reasoning_run`), so they do not collide in the shared venv; see the project READMEs. Runs against real models (Claude, local Ollama) were done for 01 and 02; project 03 has only been tested offline so far; 04 to 07 and 09 were also run against `qwen3:4b`, 10 against `qwen3.5:9b` (smaller models were not reliable for planning); 08 needs no model and was run as a CLI.
+All 13 projects are implemented and covered by offline tests (stub LLM, no key needed). Each project has its own script names (`research_crew_*`, `triage_flow_*`, `code_review_*`, `hierarchical_run`, `conditional_run`, `streaming_run`, `standalone_run`, `checkpoint_run`, `chat_run`, `reasoning_run`, `multimodal_run`, `tools_run`, `a2a_serve`/`a2a_ask`), so they do not collide in the shared venv; see the project READMEs. Runs against real models (Claude, local Ollama) were done for 01 and 02; project 03 has only been tested offline so far; 04 to 07 and 09 were also run against `qwen3:4b`, 10 against `qwen3.5:9b` (smaller models were not reliable for planning), 11 to 13 against `qwen3:4b` (11 also `qwen2.5vl:7b` for vision); 08 needs no model and was run as a CLI.
 
 ## Repository layout
 
@@ -40,7 +43,10 @@ All 10 projects are implemented and covered by offline tests (stub LLM, no key n
 ├── 07-standalone-calls/             # ... src/standalone_calls/
 ├── 08-flow-checkpoint/              # ... src/flow_checkpoint/
 ├── 09-conversational-flow/          # ... src/conversational_flow/
-└── 10-agent-reasoning/              # ... src/agent_reasoning/
+├── 10-agent-reasoning/              # ... src/agent_reasoning/
+├── 11-multimodal-agent/             # ... src/multimodal_agent/
+├── 12-stock-tools/                  # ... src/stock_tools/
+└── 13-agent-to-agent/               # ... src/agent_to_agent/
 ```
 
 Each project keeps its own `.env` (git-ignored). Copy `.env.example` to `.env` and fill in your keys.
@@ -95,11 +101,14 @@ Copy-Item 07-standalone-calls\.env.example 07-standalone-calls\.env
 Copy-Item 08-flow-checkpoint\.env.example 08-flow-checkpoint\.env
 Copy-Item 09-conversational-flow\.env.example 09-conversational-flow\.env
 Copy-Item 10-agent-reasoning\.env.example 10-agent-reasoning\.env
+Copy-Item 11-multimodal-agent\.env.example 11-multimodal-agent\.env
+Copy-Item 12-stock-tools\.env.example 12-stock-tools\.env
+Copy-Item 13-agent-to-agent\.env.example 13-agent-to-agent\.env
 ```
 
 **Linux / macOS**
 ```bash
-for p in 01-research-report-crew 02-support-ticket-triage-flow 03-code-review-agent 04-hierarchical-delegation 05-conditional-tasks 06-streaming 07-standalone-calls 08-flow-checkpoint 09-conversational-flow 10-agent-reasoning; do cp $p/.env.example $p/.env; done
+for p in 01-research-report-crew 02-support-ticket-triage-flow 03-code-review-agent 04-hierarchical-delegation 05-conditional-tasks 06-streaming 07-standalone-calls 08-flow-checkpoint 09-conversational-flow 10-agent-reasoning 11-multimodal-agent 12-stock-tools 13-agent-to-agent; do cp $p/.env.example $p/.env; done
 ```
 
 Edit each `.env`: set `LLM_PROVIDER=claude` and `ANTHROPIC_API_KEY`, or `LLM_PROVIDER=local`. `.env` files are never committed; API keys must be entered again on every computer.

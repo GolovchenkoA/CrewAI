@@ -1,6 +1,6 @@
 # AGENTS.md
 
-A learning repository for CrewAI: ten small projects in one uv workspace. Windows + PowerShell is the main environment.
+A learning repository for CrewAI: thirteen small projects in one uv workspace. Windows + PowerShell is the main environment.
 
 ## Layout
 
@@ -16,6 +16,9 @@ A learning repository for CrewAI: ten small projects in one uv workspace. Window
 | `08-flow-checkpoint` | flow checkpoint and resume (no LLM) |
 | `09-conversational-flow` | chat flow with `handle_turn`, state per session |
 | `10-agent-reasoning` | agent planning (`planning_config`) vs a plain agent |
+| `11-multimodal-agent` | agent + vision tool (image input) |
+| `12-stock-tools` | `crewai_tools` stock tools on one agent |
+| `13-agent-to-agent` | A2A server and client agents in two processes |
 
 One shared `.venv` and one `uv.lock` live in the repository root. Each project has its own `pyproject.toml`, `.env.example` (copy to `.env`) and README with its run commands. Python is pinned by `.python-version` (3.12; crewai does not support 3.14).
 

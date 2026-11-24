@@ -14,6 +14,9 @@ dependencies = [
     "flow-checkpoint",
     "conversational-flow",
     "agent-reasoning",
+    "multimodal-agent",
+    "stock-tools",
+    "agent-to-agent",
 ]
 
 [tool.uv]
@@ -33,6 +36,9 @@ standalone-calls = { workspace = true }
 flow-checkpoint = { workspace = true }
 conversational-flow = { workspace = true }
 agent-reasoning = { workspace = true }
+multimodal-agent = { workspace = true }
+stock-tools = { workspace = true }
+agent-to-agent = { workspace = true }
 
 [tool.uv.workspace]
 members = [
@@ -46,6 +52,9 @@ members = [
     "08-flow-checkpoint",
     "09-conversational-flow",
     "10-agent-reasoning",
+    "11-multimodal-agent",
+    "12-stock-tools",
+    "13-agent-to-agent",
 ]
 
 [dependency-groups]

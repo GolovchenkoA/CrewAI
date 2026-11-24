@@ -1,0 +1,9 @@
+Release notes for Tidyfiles
+
+Version 2.3.0 (2026-10-14)
+- Added: --dry-run flag that lists what would be moved.
+- Deprecated: the --legacy flag will be removed in 3.0.
+- Fixed: files with spaces in the name are now moved correctly.
+
+Version 2.2.1 (2026-09-02)
+- Fixed: a crash when the target folder is on a network drive.
